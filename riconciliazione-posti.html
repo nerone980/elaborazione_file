@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riconciliazione posti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fondo:#111920;
+  --pannello:#18232B;
+  --alto:#1F2E38;
+  --campo:#0E161C;
+  --bordo:#2A3B47;
+  --bordo-forte:#3D5462;
+  --testo:#E3EBF0;
+  --tenue:#8CA3B2;
+  --fioco:#5F7484;
+  --ottone:#E3A83C;
+  --ottone-scuro:#8A6520;
+  --verde:#63C68C;
+  --rosso:#EC7663;
+  --sans:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --cond:"IBM Plex Sans Condensed","IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  --sp:22px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:82px}
+body{
+  margin:0;background:var(--fondo);color:var(--testo);
+  font-family:var(--sans);font-size:15.5px;line-height:1.55;
+  padding-bottom:132px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 26px}
+::selection{background:var(--ottone);color:#12191F}
+
+/* ---------- testata ---------- */
+.testata{padding:44px 0 26px}
+.occhiello{font-family:var(--cond);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ottone);font-weight:600;margin:0 0 10px}
+h1{font-family:var(--cond);font-weight:700;font-size:40px;line-height:1.05;margin:0 0 12px;letter-spacing:-.015em}
+.occhiello + h1{margin-top:0}
+.intro{margin:0;max-width:62ch;color:var(--tenue);font-size:15px}
+
+/* ---------- barra di avanzamento ---------- */
+.rotaia{position:sticky;top:0;z-index:30;background:rgba(17,25,32,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--bordo)}
+.rotaia .wrap{display:flex;align-items:center;gap:8px;overflow-x:auto;padding-top:11px;padding-bottom:11px;scrollbar-width:none}
+.rotaia .wrap::-webkit-scrollbar{display:none}
+.tappa{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;background:none;border:1px solid var(--bordo);color:var(--fioco);
+  font-family:var(--cond);font-size:12.5px;font-weight:600;letter-spacing:.04em;padding:6px 12px;cursor:pointer;border-radius:2px;transition:color .15s,border-color .15s}
+.tappa:hover{color:var(--testo);border-color:var(--bordo-forte)}
+.tappa .pallino{width:7px;height:7px;border-radius:50%;background:var(--bordo-forte);flex:0 0 auto}
+.tappa.fatta{color:var(--testo);border-color:var(--ottone-scuro)}
+.tappa.fatta .pallino{background:var(--ottone)}
+.tappa.qui{border-color:var(--ottone);color:var(--ottone)}
+.rotaia .sep{color:var(--bordo-forte);flex:0 0 auto;font-family:var(--mono);font-size:12px}
+
+/* ---------- schede ---------- */
+.carta{background:var(--pannello);border:1px solid var(--bordo);border-radius:3px;margin-bottom:16px;overflow:hidden}
+.carta.aperta{border-color:var(--bordo-forte)}
+.carta-testa{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px var(--sp)}
+.carta.piegata .carta-testa{padding-bottom:18px}
+.tit{display:flex;gap:14px;align-items:flex-start;min-width:0}
+.indice{flex:0 0 auto;width:26px;height:26px;border:1px solid var(--ottone-scuro);color:var(--ottone);
+  font-family:var(--mono);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:1px;border-radius:2px}
+.carta.completa .indice{background:var(--ottone);color:#12191F;border-color:var(--ottone)}
+.tit h2{font-family:var(--cond);font-size:19px;font-weight:600;margin:0;letter-spacing:.005em}
+.riassunto{margin:3px 0 0;font-size:13px;color:var(--tenue);font-family:var(--mono);line-height:1.5;
+  overflow-wrap:anywhere}
+.riassunto .manca{color:var(--rosso)}
+.riassunto b{color:var(--testo);font-weight:500}
+.testa-azioni{display:flex;gap:8px;flex:0 0 auto}
+.corpo{padding:0 var(--sp) var(--sp)}
+.carta.piegata .corpo{display:none}
+.aiuto{color:var(--tenue);font-size:14px;margin:0 0 18px;max-width:72ch}
+
+/* ---------- caricamento ---------- */
+.deposito{border:1px dashed var(--bordo-forte);background:var(--campo);padding:30px 20px;text-align:center;cursor:pointer;border-radius:3px;transition:border-color .15s,background .15s}
+.deposito:hover,.deposito.sopra{border-color:var(--ottone);background:#131F27}
+.deposito strong{display:block;font-family:var(--cond);font-size:16.5px;font-weight:600;margin-bottom:3px}
+.deposito span{font-size:13px;color:var(--fioco);font-family:var(--mono)}
+.deposito:focus-visible{outline:2px solid var(--ottone);outline-offset:2px}
+
+/* ---------- controlli ---------- */
+.campi{display:flex;flex-wrap:wrap;gap:16px;margin:0 0 20px}
+.campo{display:flex;flex-direction:column;gap:6px;min-width:0}
+.etichetta,.campo label{font-family:var(--cond);font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--tenue);font-weight:600}
+select,input[type=number],input[type=text]{
+  font-family:var(--sans);font-size:14.5px;padding:9px 11px;border:1px solid var(--bordo-forte);
+  background:var(--campo);color:var(--testo);border-radius:2px;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--tenue) 50%),linear-gradient(135deg,var(--tenue) 50%,transparent 50%);
+  background-position:calc(100% - 16px) calc(50% + 1px),calc(100% - 11px) calc(50% + 1px);
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
+input[type=number]{width:104px}
+select:focus-visible,input:focus-visible,button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ottone);outline-offset:1px}
+select:hover,input:hover{border-color:var(--tenue)}
+
+/* ---------- anteprima foglio ---------- */
+.griglia{overflow:auto;border:1px solid var(--bordo);background:var(--campo);border-radius:2px;max-height:260px}
+table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:100%}
+.griglia td{border-right:1px solid #17222A;border-bottom:1px solid #17222A;padding:6px 10px;white-space:nowrap;max-width:230px;overflow:hidden;text-overflow:ellipsis;color:var(--tenue)}
+.griglia tr.intesta td{background:var(--alto);color:var(--testo);font-weight:600}
+.griglia tr.pre td{color:var(--fioco);font-style:italic}
+.griglia td.nr{background:var(--pannello);color:var(--fioco);text-align:right;cursor:pointer;position:sticky;left:0;user-select:none;min-width:64px}
+.griglia td.nr:hover{background:var(--ottone);color:#12191F}
+.griglia td.nr .tag{font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-right:7px;color:var(--ottone)}
+.griglia tr.pre td.nr .tag{color:var(--fioco)}
+.nota{font-size:12.5px;color:var(--fioco);margin:8px 0 20px}
+
+/* ---------- liste di colonne ---------- */
+.duecol{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.pila{display:flex;flex-direction:column;gap:8px;min-width:0}
+.elenco{max-height:242px;overflow-y:auto;border:1px solid var(--bordo);background:var(--campo);border-radius:2px}
+.elenco label{display:flex;gap:11px;align-items:center;padding:8px 11px;font-family:var(--mono);font-size:13px;
+  text-transform:none;letter-spacing:0;color:var(--tenue);font-weight:400;cursor:pointer;border-bottom:1px solid #17222A}
+.elenco label:last-child{border-bottom:0}
+.elenco label:hover{background:var(--alto);color:var(--testo)}
+.elenco input{accent-color:var(--ottone);margin:0;width:15px;height:15px;flex:0 0 auto}
+.elenco input:checked + .lett + .nom,.elenco input:checked ~ .nom{color:var(--testo)}
+.elenco .lett{color:var(--fioco);min-width:26px;flex:0 0 auto}
+.elenco .nom{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.coppie{display:flex;flex-direction:column;gap:9px}
+.coppia{display:grid;grid-template-columns:1fr 20px 1fr;align-items:center;gap:9px}
+.coppia .da{font-family:var(--mono);font-size:13px;background:var(--campo);border:1px solid var(--bordo);
+  padding:9px 11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tenue);border-radius:2px}
+.freccia{text-align:center;color:var(--fioco);font-family:var(--mono);font-size:13px}
+.coppia select{width:100%;min-width:0}
+
+/* ---------- regole ---------- */
+.sezione{margin-top:26px;border-top:1px solid var(--bordo);padding-top:20px}
+.regola{border:1px solid var(--bordo);background:var(--campo);padding:14px;margin-bottom:10px;border-radius:2px}
+.regola .testa{display:grid;grid-template-columns:minmax(140px,1fr) minmax(190px,2.2fr) 20px minmax(120px,1fr) 36px;gap:10px;align-items:center}
+.regola input[type=text]{font-family:var(--mono);font-size:13px;width:100%;min-width:0}
+.regola select{width:100%;min-width:0}
+.regola .via{border:1px solid var(--bordo-forte);background:transparent;color:var(--fioco);font-family:var(--mono);
+  font-size:16px;line-height:1;padding:9px 0;cursor:pointer;border-radius:2px}
+.regola .via:hover{background:var(--rosso);border-color:var(--rosso);color:#12191F}
+.regola .piede{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:11px;font-size:12.5px;color:var(--fioco)}
+.regola .piede a{color:var(--ottone);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.gettoni{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px;max-height:158px;overflow-y:auto;border-top:1px solid var(--bordo);padding-top:11px}
+.gettone{font-family:var(--mono);font-size:12px;border:1px solid var(--bordo-forte);background:transparent;color:var(--tenue);
+  padding:5px 9px;cursor:pointer;border-radius:2px;letter-spacing:0;font-weight:400}
+.gettone:hover{border-color:var(--ottone);color:var(--ottone)}
+.gettone.presa{background:var(--ottone);border-color:var(--ottone);color:#12191F}
+
+/* ---------- bottoni ---------- */
+button{font-family:var(--cond);font-size:14.5px;font-weight:600;letter-spacing:.04em;padding:11px 20px;
+  border:1px solid var(--ottone);background:var(--ottone);color:#12191F;cursor:pointer;border-radius:2px;transition:background .15s,border-color .15s,color .15s}
+button:hover:not(:disabled){background:#F0B85A;border-color:#F0B85A}
+button:disabled{opacity:.32;cursor:not-allowed}
+button.calmo{background:transparent;color:var(--testo);border-color:var(--bordo-forte)}
+button.calmo:hover:not(:disabled){background:var(--alto);border-color:var(--tenue)}
+button.minuto{padding:5px 11px;font-size:12px;background:transparent;color:var(--tenue);border-color:var(--bordo)}
+button.minuto:hover:not(:disabled){background:var(--alto);color:var(--testo);border-color:var(--bordo-forte)}
+.azioni{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:20px}
+
+/* ---------- aggiungi file ---------- */
+.piu{border:1px dashed var(--bordo-forte);border-radius:3px;padding:18px var(--sp);display:flex;align-items:center;
+  justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.piu p{margin:0;font-size:13.5px;color:var(--tenue)}
+
+/* ---------- opzioni ---------- */
+.opzioni{display:flex;flex-direction:column;gap:12px;margin:6px 0}
+.opzioni label{display:flex;gap:11px;align-items:flex-start;font-family:var(--sans);font-size:14.5px;
+  text-transform:none;letter-spacing:0;color:var(--testo);font-weight:400;cursor:pointer}
+.opzioni input{accent-color:var(--ottone);margin-top:4px;width:15px;height:15px;flex:0 0 auto}
+.opzioni small{display:block;color:var(--tenue);font-size:12.5px;margin-top:2px;line-height:1.45}
+
+/* ---------- esito ---------- */
+.targhe{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}
+.targa{border:1px solid var(--bordo);background:var(--campo);padding:10px 14px;border-radius:2px;font-size:12.5px;color:var(--tenue);
+  font-family:var(--cond);letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+.targa b{font-family:var(--mono);font-size:16px;font-weight:600;color:var(--testo);letter-spacing:0;text-transform:none;margin-right:7px}
+.targa.buona b{color:var(--verde)}
+.targa.allarme{border-color:#5A2E27}
+.targa.allarme b{color:var(--rosso)}
+.avviso{border-left:2px solid var(--rosso);background:var(--campo);padding:12px 15px;font-size:14px;margin:0 0 12px;border-radius:0 2px 2px 0}
+.avviso.ambra{border-left-color:var(--ottone)}
+.avviso b{font-weight:600}
+.tabella{overflow:auto;border:1px solid var(--bordo);background:var(--campo);border-radius:2px;max-height:430px}
+.tabella th{position:sticky;top:0;z-index:2;background:var(--alto);color:var(--testo);text-align:left;
+  font-weight:600;padding:9px 11px;white-space:nowrap;border-bottom:1px solid var(--bordo-forte);font-size:12px}
+.tabella td{padding:7px 11px;white-space:nowrap;border-bottom:1px solid #17222A;color:var(--tenue)}
+.tabella tbody tr:hover td{background:var(--alto);color:var(--testo)}
+.tabella td.num{text-align:right;font-variant-numeric:tabular-nums}
+.tabella tr.neg td{color:var(--rosso)}
+.tabella tr.intatta td{color:var(--fioco)}
+
+/* ---------- script sql ---------- */
+.sqlprev{font-family:var(--mono);font-size:12px;line-height:1.6;background:var(--campo);color:var(--tenue);
+  border:1px solid var(--bordo);border-left:2px solid var(--ottone);padding:13px 15px;margin:0 0 9px;overflow-x:auto;white-space:pre;border-radius:0 2px 2px 0}
+.sqlprev .off{color:var(--fioco);font-style:italic}
+
+/* ---------- il registro (elemento firma) ---------- */
+.registro{position:fixed;left:0;right:0;bottom:0;z-index:40;background:#0C1419;border-top:1px solid var(--ottone-scuro);
+  transform:translateY(103%);transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.registro.su{transform:translateY(0)}
+.registro .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;padding-top:15px;padding-bottom:15px;flex-wrap:wrap}
+.bilancio{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;font-family:var(--mono)}
+.voce{display:flex;flex-direction:column;gap:2px}
+.voce small{font-family:var(--cond);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--fioco);font-weight:600}
+.voce span{font-size:25px;font-weight:500;line-height:1;color:var(--tenue);font-variant-numeric:tabular-nums}
+.voce.finale span{color:var(--ottone);font-weight:600}
+.segno{font-size:20px;color:var(--fioco);padding-bottom:2px}
+.resto{font-family:var(--mono);font-size:12px;line-height:1.4;color:var(--rosso);border:1px solid #5A2E27;padding:8px 12px;max-width:36ch;border-radius:2px}
+
+.chiuso{display:none}
+.pie{border-top:1px solid var(--bordo);margin-top:34px;padding:22px 0 12px;font-size:12.5px;color:var(--fioco);max-width:80ch}
+.pie code{font-family:var(--mono);color:var(--tenue)}
+
+@media(max-width:820px){
+  body{padding-bottom:210px}
+  .carta-testa{flex-direction:column;align-items:stretch;gap:12px}
+  .testa-azioni{justify-content:flex-start}
+  .testa-azioni button{flex:1 1 auto}
+  .piu{flex-direction:column;align-items:stretch}
+  .duecol{grid-template-columns:1fr}
+  .regola .testa{grid-template-columns:1fr;gap:8px}
+  h1{font-size:31px}
+  .voce span{font-size:21px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<nav class="rotaia" aria-label="Avanzamento"><div class="wrap" id="rotaia"></div></nav>
+
+<div class="wrap">
+  <header class="testata">
+    <p class="occhiello">Strumento locale · i file restano sul tuo computer</p>
+    <h1>Riconciliazione posti</h1>
+    <p class="intro">Carica il file dei posti disponibili, poi uno o più file dei posti già assegnati. Indichi le colonne che fanno da chiave e quelle da sommare, e ottieni il netto: in Excel e, se serve, come script SQL di inserimento.</p>
+  </header>
+
+  <div id="allarmeLib" class="avviso chiuso">
+    <b>Libreria Excel non caricata.</b> Al primo avvio serve la connessione a internet. In alternativa scarica <code>xlsx.full.min.js</code> dal sito SheetJS, mettilo accanto a questo file e sostituisci l'indirizzo nello <code>&lt;script&gt;</code> in fondo all'HTML.
+  </div>
+
+  <!-- ============ 1 ============ -->
+  <section class="carta aperta" id="carta1">
+    <div class="carta-testa">
+      <div class="tit">
+        <span class="indice">1</span>
+        <div>
+          <h2>Posti disponibili</h2>
+          <p class="riassunto" id="riass1">Nessun file caricato.</p>
+        </div>
+      </div>
+      <div class="testa-azioni">
+        <button type="button" class="minuto piega chiuso" id="piega1">Comprimi</button>
+      </div>
+    </div>
+    <div class="corpo">
+      <p class="aiuto">Il totale di partenza, quello da cui si sottrae.</p>
+
+      <div class="deposito" id="dep1" tabindex="0" role="button" aria-label="Carica il file dei posti disponibili">
+        <strong>Trascina qui il file, o clicca per sceglierlo</strong>
+        <span>.xlsx · .xlsm · .xls</span>
+      </div>
+      <input type="file" id="inp1" accept=".xlsx,.xlsm,.xls" class="chiuso">
+
+      <div id="conf1" class="chiuso">
+        <div class="campi" style="margin-top:20px">
+          <div class="campo"><label for="foglio1">Foglio</label><select id="foglio1"></select></div>
+          <div class="campo"><label for="hdr1">Riga dei titoli</label><input type="number" id="hdr1" min="1" value="1"></div>
+          <div class="campo"><label for="dat1">Prima riga di dati</label><input type="number" id="dat1" min="2" value="2"></div>
+        </div>
+        <div class="griglia" id="prev1"></div>
+        <p class="nota">Clicca il numero di una riga per usarla come riga dei titoli.</p>
+
+        <div class="duecol">
+          <div class="pila">
+            <span class="etichetta">Colonne chiave</span>
+            <div class="elenco" id="key1"></div>
+          </div>
+          <div class="pila">
+            <span class="etichetta">Colonna del totale</span>
+            <select id="val1"></select>
+            <div class="opzioni" style="margin-top:14px">
+              <label><input type="checkbox" id="optNum" checked><span>Confronta i codici come numeri<small>Così 88, «88» e «088» sono la stessa chiave. Togli la spunta se gli zeri iniziali contano.</small></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ file da sottrarre ============ -->
+  <div id="fonti"></div>
+
+  <div class="piu">
+    <p>I posti di tutti i file si sommano prima di essere sottratti.</p>
+    <button type="button" class="calmo" id="piuFonte">Aggiungi un file da sottrarre</button>
+  </div>
+
+  <!-- ============ calcolo ============ -->
+  <section class="carta" id="cartaCalc">
+    <div class="carta-testa">
+      <div class="tit">
+        <span class="indice" id="idxCalc">3</span>
+        <div>
+          <h2>Calcolo</h2>
+          <p class="riassunto" id="statoCalcolo">In attesa dei file.</p>
+        </div>
+      </div>
+      <div class="testa-azioni"><button id="btnCalcola" disabled>Calcola il netto</button></div>
+    </div>
+  </section>
+
+  <!-- ============ esito ============ -->
+  <section class="carta aperta chiuso" id="cartaEsito">
+    <div class="carta-testa">
+      <div class="tit">
+        <span class="indice" id="idxEsito">4</span>
+        <div>
+          <h2>Esito</h2>
+          <p class="riassunto" id="riassEsito"></p>
+        </div>
+      </div>
+    </div>
+    <div class="corpo">
+      <div class="targhe" id="targhe"></div>
+      <div id="messaggi"></div>
+
+      <div class="opzioni" style="margin-bottom:18px">
+        <label><input type="radio" name="neg" value="tieni" checked><span>Lascia i valori negativi<small>Quando i posti da sottrarre superano quelli disponibili, il netto resta negativo e la riga viene segnalata.</small></span></label>
+        <label><input type="radio" name="neg" value="azzera"><span>Azzera i valori negativi<small>Il netto non scende sotto zero.</small></span></label>
+      </div>
+
+      <div class="campi">
+        <div class="campo"><label for="filtro">Righe da mostrare</label>
+          <select id="filtro">
+            <option value="tutte">tutte</option>
+            <option value="variate">solo quelle con una sottrazione</option>
+            <option value="neg">solo quelle negative</option>
+            <option value="nonabb">solo quelle che nessun file tocca</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tabella" id="tabella"></div>
+      <p class="nota" id="contaRighe"></p>
+
+      <div class="azioni" style="margin-top:0">
+        <button id="btnExport">Scarica l'Excel</button>
+        <button id="btnReset" class="calmo">Ricomincia</button>
+      </div>
+
+      <div class="sezione">
+        <span class="etichetta">Script SQL di inserimento</span>
+        <p class="aiuto" style="margin:8px 0 16px">Una INSERT per riga, con <code>N_POSTI_ENTRATA</code> preso dal netto appena calcolato.</p>
+
+        <div class="campi">
+          <div class="campo"><label for="sqlBando">ID_BANDO</label><input type="number" id="sqlBando" min="0" step="1" value="8"></div>
+          <div class="campo"><label for="sqlSede">Colonna per CODICE_SEDE</label><select id="sqlSede"></select></div>
+          <div class="campo"><label for="sqlQual">Colonna per ID_QUALIFICA</label><select id="sqlQual"></select></div>
+        </div>
+
+        <div class="opzioni" style="margin-bottom:16px">
+          <label><input type="checkbox" id="sqlPositivi" checked><span>Solo le righe con almeno un posto<small>Le righe a zero o negative non producono INSERT.</small></span></label>
+        </div>
+
+        <pre class="sqlprev" id="sqlPrev"></pre>
+        <p class="nota" id="sqlConta"></p>
+
+        <div class="azioni" style="margin-top:0">
+          <button id="btnSqlOrd">SCRIPT_ORDINARIO</button>
+          <button id="btnSql104">SCRIPT_104</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="pie">
+    Tutto avviene nel browser: nessun file viene inviato da nessuna parte. Celle vuote, trattini e testo valgono zero. Le chiavi presenti solo nei file da sottrarre non tolgono posti a nessuno e finiscono nel foglio <code>NON_ABBINATE</code> dell'Excel.
+  </p>
+</div>
+
+<div class="registro" id="registro">
+  <div class="wrap">
+    <div class="bilancio">
+      <span class="voce"><small>disponibili</small><span id="rTot">0</span></span>
+      <span class="segno">−</span>
+      <span class="voce"><small>sottratti</small><span id="rSub">0</span></span>
+      <span class="segno">=</span>
+      <span class="voce finale"><small>netti</small><span id="rNet">0</span></span>
+    </div>
+    <div class="resto chiuso" id="rResto"></div>
+    <button id="btnExport2">Scarica l'Excel</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+        onerror="document.getElementById('allarmeLib').classList.remove('chiuso')"></script>
+<script>
+(function(){
+"use strict";
+
+var P = {nome:null,wb:null,foglio:null,righe:[],hdr:1,dat:2,cols:[],keys:[],val:null};
+var FONTI = [];
+var RES = null;
+var SEQ = 0;
+
+var $ = function(id){return document.getElementById(id);};
+function lettera(i){var s="";i++;while(i>0){var m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=(i-m-1)/26;}return s;}
+function itn(n){return (Math.round(n*100)/100).toLocaleString('it-IT');}
+function accorcia(s,n){ s=String(s||""); return s.length>n ? s.slice(0,n-1)+"…" : s; }
+
+/* ---------- normalizzazione ---------- */
+function chiave(v,num){
+  if(v===null||v===undefined) return "";
+  var s=String(v).trim();
+  if(s==="") return "";
+  if(num && /^-?\d+([.,]0+)?$/.test(s)){
+    var n=Number(s.replace(',','.'));
+    if(isFinite(n)) return String(n);
+  }
+  return s.toUpperCase();
+}
+function numero(v){
+  if(typeof v==="number") return isFinite(v)?v:0;
+  if(v===null||v===undefined||typeof v==="boolean") return 0;
+  var s=String(v).trim();
+  if(s===""||s==="-"||s==="–"||s==="--"||/^n\.?\s*d\.?$/i.test(s)) return 0;
+  s=s.replace(/[\s\u00A0'"]/g,"");
+  if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s=s.replace(/\./g,"").replace(",",".");
+  else if(s.indexOf(",")>-1 && s.indexOf(".")===-1) s=s.replace(",",".");
+  var n=Number(s);
+  return isFinite(n)?n:0;
+}
+function spezza(t){ return String(t||"").split(/[\s,;|\n\r\t]+/).filter(function(s){return s!=="";}); }
+function numerico(){ return $('optNum').checked; }
+
+/* ---------- lettura fogli ---------- */
+function leggiRighe(wb,f){ return XLSX.utils.sheet_to_json(wb.Sheets[f],{header:1,defval:null,blankrows:true,raw:true}); }
+function titoliProbabili(righe){
+  for(var i=0;i<Math.min(10,righe.length);i++){
+    var pieni=(righe[i]||[]).filter(function(c){return c!==null&&String(c).trim()!=="";}).length;
+    if(pieni>=2) return i+1;
+  }
+  return 1;
+}
+function colonneDa(righe,hdr,dat){
+  var largh=0;
+  for(var i=0;i<righe.length;i++) largh=Math.max(largh,(righe[i]||[]).length);
+  var ultima=Math.max(hdr,dat-1), cols=[];
+  for(var c=0;c<largh;c++){
+    var pezzi=[], visti={};
+    for(var r=hdr-1;r<=ultima-1;r++){
+      var v=(righe[r]||[])[c];
+      if(v===null||v===undefined) continue;
+      var s=String(v).replace(/\s+/g," ").trim();
+      if(s===""||visti[s]) continue;
+      visti[s]=1; pezzi.push(s);
+    }
+    var n=pezzi.join(" · ");
+    if(n.length>64) n=n.slice(0,63)+"…";
+    if(n==="") n="(colonna "+lettera(c)+")";
+    cols.push({i:c,lettera:lettera(c),nome:n});
+  }
+  return cols;
+}
+function grigliaIn(box,righe,hdr,dat,cols,alClick){
+  var max=Math.min(righe.length,Math.max(9,dat+2));
+  var t=document.createElement("table"), tb=document.createElement("tbody");
+  for(var r=0;r<max;r++){
+    var tr=document.createElement("tr");
+    if(r+1===hdr) tr.className="intesta"; else if(r+1<dat) tr.className="pre";
+    var td=document.createElement("td");
+    td.className="nr"; td.title="Usa la riga "+(r+1)+" come riga dei titoli";
+    if(r+1===hdr){ var tg=document.createElement("span"); tg.className="tag"; tg.textContent="titoli"; td.appendChild(tg); }
+    else if(r+1===dat){ var tg2=document.createElement("span"); tg2.className="tag"; tg2.textContent="dati"; td.appendChild(tg2); }
+    td.appendChild(document.createTextNode(String(r+1)));
+    (function(rr){ td.onclick=function(){ alClick(rr+1); }; })(r);
+    tr.appendChild(td);
+    var riga=righe[r]||[], quante=Math.min(cols.length||riga.length,14);
+    for(var c=0;c<quante;c++){
+      var cel=document.createElement("td");
+      var v=riga[c];
+      cel.textContent=(v===null||v===undefined)?"":String(v);
+      tr.appendChild(cel);
+    }
+    tb.appendChild(tr);
+  }
+  t.appendChild(tb); box.innerHTML=""; box.appendChild(t);
+}
+
+/* ---------- schede: apri, chiudi, riassumi ---------- */
+function piega(carta,si){
+  carta.classList.toggle('piegata',si);
+  carta.classList.toggle('aperta',!si);
+  var b=carta.querySelector('.piega');
+  if(b) b.textContent = si ? "Modifica" : "Comprimi";
+}
+function riassuntoPrimo(){
+  var e=$('riass1');
+  if(!P.wb){ e.textContent="Nessun file caricato."; return; }
+  var pezzi=["<b>"+accorcia(P.nome,34)+"</b>","foglio "+accorcia(P.foglio,18)];
+  if(P.keys.length) pezzi.push("chiave: "+P.keys.map(function(i){return accorcia(P.cols[i].nome,22);}).join(" + "));
+  else pezzi.push('<span class="manca">manca la chiave</span>');
+  if(P.val!==null) pezzi.push("totale: "+accorcia(P.cols[P.val].nome,22));
+  else pezzi.push('<span class="manca">manca la colonna del totale</span>');
+  e.innerHTML=pezzi.join("  ·  ");
+  $('carta1').classList.toggle('completa',!!(P.wb&&P.keys.length&&P.val!==null));
+  $('piega1').classList.toggle('chiuso',!P.wb);
+}
+function riassuntoFonte(f){
+  var e=f.el.querySelector('.riassunto');
+  if(!f.wb){ e.textContent="Nessun file caricato."; f.el.classList.remove('completa'); return; }
+  var pezzi=["<b>"+accorcia(f.nome,34)+"</b>","foglio "+accorcia(f.foglio,18)];
+  if(P.keys.length && P.keys.every(function(i){return f.map[i]!==undefined;}))
+    pezzi.push("chiave: "+P.keys.map(function(i){return accorcia(f.cols[f.map[i]].nome,22);}).join(" + "));
+  else pezzi.push('<span class="manca">manca la corrispondenza delle chiavi</span>');
+  if(f.sum.length) pezzi.push("somma: "+f.sum.map(function(i){return accorcia(f.cols[i].nome,20);}).join(" + "));
+  else pezzi.push('<span class="manca">manca la colonna da sommare</span>');
+  if(f.regole.length) pezzi.push(f.regole.length+" regol"+(f.regole.length===1?"a":"e"));
+  e.innerHTML=pezzi.join("  ·  ");
+  f.el.classList.toggle('completa',fontePronta(f));
+  f.el.querySelector('.piega').classList.toggle('chiuso',!f.wb);
+}
+
+/* ---------- rotaia ---------- */
+function rotaia(){
+  var r=$('rotaia'); r.innerHTML="";
+  function tappa(testo,id,fatta){
+    var b=document.createElement("button");
+    b.type="button"; b.className="tappa"+(fatta?" fatta":"");
+    var p=document.createElement("span"); p.className="pallino";
+    b.appendChild(p); b.appendChild(document.createTextNode(testo));
+    b.onclick=function(){
+      var el=document.getElementById(id);
+      if(el){ if(el.classList.contains('piegata')) piega(el,false); el.scrollIntoView({block:"start"}); }
+    };
+    r.appendChild(b);
+  }
+  function sep(){ var s=document.createElement("span"); s.className="sep"; s.textContent="→"; r.appendChild(s); }
+  tappa("1 · Disponibili","carta1",!!(P.wb&&P.keys.length&&P.val!==null));
+  FONTI.forEach(function(f,i){
+    sep();
+    tappa((i+2)+" · "+(f.nome?accorcia(f.nome.replace(/\.[^.]+$/,""),16):"da sottrarre"),"fonte"+f.id,fontePronta(f));
+  });
+  sep(); tappa((FONTI.length+2)+" · Calcolo","cartaCalc",!!RES);
+  if(RES){ sep(); tappa((FONTI.length+3)+" · Esito","cartaEsito",true); }
+  $('idxCalc').textContent=FONTI.length+2;
+  $('idxEsito').textContent=FONTI.length+3;
+}
+
+/* ================= PRIMO FILE ================= */
+function leggiPrimo(file){
+  if(typeof XLSX==="undefined"){ $('allarmeLib').classList.remove('chiuso'); return; }
+  var fr=new FileReader();
+  fr.onload=function(e){
+    var wb;
+    try{ wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"}); }
+    catch(err){ alert("Non riesco a leggere il file: "+err.message); return; }
+    if(!wb.SheetNames.length){ alert("Il file non contiene fogli."); return; }
+    P.wb=wb; P.nome=file.name;
+    var sel=$('foglio1'); sel.innerHTML="";
+    wb.SheetNames.forEach(function(s){var o=document.createElement("option");o.value=s;o.textContent=s;sel.appendChild(o);});
+    $('conf1').classList.remove('chiuso');
+    caricaFoglioPrimo(wb.SheetNames[0]);
+    if(!FONTI.length) nuovaFonte();
+  };
+  fr.readAsArrayBuffer(file);
+}
+function caricaFoglioPrimo(f){
+  P.foglio=f; P.righe=leggiRighe(P.wb,f);
+  P.hdr=titoliProbabili(P.righe); P.dat=P.hdr+1;
+  $('hdr1').value=P.hdr; $('dat1').value=P.dat;
+  aggiornaPrimo();
+}
+function aggiornaPrimo(){
+  P.cols=colonneDa(P.righe,P.hdr,P.dat);
+  P.keys=P.keys.filter(function(i){return i<P.cols.length;});
+  if(P.val!==null && P.val>=P.cols.length) P.val=null;
+  grigliaIn($('prev1'),P.righe,P.hdr,P.dat,P.cols,function(r){
+    P.hdr=r; P.dat=r+1; $('hdr1').value=r; $('dat1').value=r+1; aggiornaPrimo();
+  });
+  disegnaChiavi1(); disegnaValore1();
+  FONTI.forEach(function(f){ disegnaMappa(f); disegnaRegole(f); riassuntoFonte(f); });
+  verificaPronto();
+}
+function disegnaChiavi1(){
+  var box=$('key1'); box.innerHTML="";
+  P.cols.forEach(function(c){
+    var l=document.createElement("label");
+    var cb=document.createElement("input"); cb.type="checkbox"; cb.checked=P.keys.indexOf(c.i)>-1;
+    cb.onchange=function(){
+      if(cb.checked){ if(P.keys.indexOf(c.i)<0) P.keys.push(c.i); }
+      else P.keys=P.keys.filter(function(x){return x!==c.i;});
+      FONTI.forEach(function(f){ disegnaMappa(f); disegnaRegole(f); riassuntoFonte(f); });
+      verificaPronto();
+    };
+    var sp=document.createElement("span"); sp.className="lett"; sp.textContent=c.lettera;
+    var nm=document.createElement("span"); nm.className="nom"; nm.textContent=c.nome; nm.title=c.nome;
+    l.appendChild(cb); l.appendChild(sp); l.appendChild(nm); box.appendChild(l);
+  });
+}
+function disegnaValore1(){
+  var sel=$('val1'); sel.innerHTML="";
+  var v=document.createElement("option"); v.value=""; v.textContent="— scegli la colonna —"; sel.appendChild(v);
+  P.cols.forEach(function(c){
+    var o=document.createElement("option"); o.value=c.i; o.textContent=c.lettera+" · "+c.nome; sel.appendChild(o);
+  });
+  sel.value=P.val===null?"":String(P.val);
+  sel.onchange=function(){ P.val=sel.value===""?null:Number(sel.value); verificaPronto(); };
+}
+
+/* ================= FILE DA SOTTRARRE ================= */
+function nuovaFonte(){
+  var f={id:++SEQ,nome:null,wb:null,foglio:null,righe:[],hdr:1,dat:2,cols:[],map:{},sum:[],regole:[],el:null};
+  FONTI.push(f);
+  FONTI.forEach(function(x){ if(x!==f && fontePronta(x)) piega(x.el,true); });
+  if(P.wb && P.keys.length && P.val!==null) piega($('carta1'),true);
+  costruisciFonte(f);
+  rinumera(); verificaPronto();
+  return f;
+}
+function rimuoviFonte(f){
+  FONTI=FONTI.filter(function(x){return x!==f;});
+  if(f.el&&f.el.parentNode) f.el.parentNode.removeChild(f.el);
+  rinumera(); verificaPronto();
+}
+function rinumera(){
+  FONTI.forEach(function(f,i){
+    if(!f.el) return;
+    f.el.id="fonte"+f.id;
+    f.el.querySelector('.indice').textContent=i+2;
+    f.el.querySelector('h2').textContent = FONTI.length>1 ? ("Posti già assegnati — file "+(i+1)) : "Posti già assegnati";
+    f.el.querySelector('.togli').classList.toggle('chiuso',FONTI.length<2);
+  });
+  rotaia();
+}
+
+function costruisciFonte(f){
+  var s=document.createElement("section");
+  s.className="carta aperta"; s.id="fonte"+f.id;
+  s.innerHTML=
+    '<div class="carta-testa">'+
+      '<div class="tit"><span class="indice"></span><div><h2></h2><p class="riassunto">Nessun file caricato.</p></div></div>'+
+      '<div class="testa-azioni">'+
+        '<button type="button" class="minuto togli chiuso">Togli</button>'+
+        '<button type="button" class="minuto piega chiuso">Comprimi</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="corpo">'+
+      '<p class="aiuto">Le colonne che scegli qui vengono sommate e sottratte al totale del primo file.</p>'+
+      '<div class="deposito" tabindex="0" role="button"><strong>Trascina qui il file, o clicca per sceglierlo</strong><span>.xlsx · .xlsm · .xls</span></div>'+
+      '<input type="file" accept=".xlsx,.xlsm,.xls" class="chiuso">'+
+      '<div class="conf chiuso">'+
+        '<div class="campi" style="margin-top:20px">'+
+          '<div class="campo"><span class="etichetta">Foglio</span><select class="fogli"></select></div>'+
+          '<div class="campo"><span class="etichetta">Riga dei titoli</span><input type="number" class="hdr" min="1" value="1"></div>'+
+          '<div class="campo"><span class="etichetta">Prima riga di dati</span><input type="number" class="dat" min="2" value="2"></div>'+
+        '</div>'+
+        '<div class="griglia prev"></div>'+
+        '<p class="nota">Se i titoli occupano due righe, tieni come riga dei titoli quella con i nomi e sposta in avanti la prima riga di dati.</p>'+
+        '<div class="duecol">'+
+          '<div class="pila"><span class="etichetta">Corrispondenza delle chiavi</span><div class="coppie mappa"></div></div>'+
+          '<div class="pila"><span class="etichetta">Colonne da sommare</span><div class="elenco somme"></div></div>'+
+        '</div>'+
+        '<div class="sezione">'+
+          '<span class="etichetta">Aggregazione dei codici — facoltativa</span>'+
+          '<p class="aiuto" style="margin:8px 0 14px">Riscrivi uno o più codici di questo file in un codice diverso prima del confronto. Le righe che finiscono sullo stesso codice si sommano fra loro.</p>'+
+          '<div class="regole"></div>'+
+          '<div class="azioni" style="margin-top:12px"><button type="button" class="calmo piuRegola">Aggiungi una regola</button></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  f.el=s;
+  $('fonti').appendChild(s);
+
+  var dep=s.querySelector('.deposito'), inp=s.querySelector('input[type=file]');
+  dep.onclick=function(){inp.click();};
+  dep.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();inp.click();}};
+  dep.ondragover=function(e){e.preventDefault();dep.classList.add('sopra');};
+  dep.ondragleave=function(){dep.classList.remove('sopra');};
+  dep.ondrop=function(e){e.preventDefault();dep.classList.remove('sopra');if(e.dataTransfer.files[0]) leggiFonte(f,e.dataTransfer.files[0]);};
+  inp.onchange=function(){ if(inp.files[0]) leggiFonte(f,inp.files[0]); };
+
+  s.querySelector('.fogli').onchange=function(){ caricaFoglioFonte(f,this.value); };
+  s.querySelector('.hdr').onchange=function(){
+    var v=Math.max(1,Number(this.value)||1); f.hdr=v; this.value=v;
+    if(f.dat<=v){ f.dat=v+1; s.querySelector('.dat').value=v+1; }
+    aggiornaFonte(f);
+  };
+  s.querySelector('.dat').onchange=function(){
+    var v=Math.max(2,Number(this.value)||2); f.dat=v; this.value=v; aggiornaFonte(f);
+  };
+  s.querySelector('.piuRegola').onclick=function(){
+    f.regole.push({col:P.keys.length?P.keys[0]:null,da:"",a:"",aperto:false});
+    disegnaRegole(f); riassuntoFonte(f);
+  };
+  s.querySelector('.piega').onclick=function(){ piega(s,!s.classList.contains('piegata')); };
+  s.querySelector('.togli').onclick=function(){
+    if(f.wb && !confirm("Tolgo "+f.nome+" dal calcolo?")) return;
+    rimuoviFonte(f);
+  };
+}
+
+function leggiFonte(f,file){
+  if(typeof XLSX==="undefined"){ $('allarmeLib').classList.remove('chiuso'); return; }
+  var fr=new FileReader();
+  fr.onload=function(e){
+    var wb;
+    try{ wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"}); }
+    catch(err){ alert("Non riesco a leggere il file: "+err.message); return; }
+    if(!wb.SheetNames.length){ alert("Il file non contiene fogli."); return; }
+    f.wb=wb; f.nome=file.name; f.map={}; f.sum=[]; f.regole=[];
+    var sel=f.el.querySelector('.fogli'); sel.innerHTML="";
+    wb.SheetNames.forEach(function(x){var o=document.createElement("option");o.value=x;o.textContent=x;sel.appendChild(o);});
+    f.el.querySelector('.conf').classList.remove('chiuso');
+    caricaFoglioFonte(f,wb.SheetNames[0]);
+    if(P.wb && P.keys.length && P.val!==null) piega($('carta1'),true);
+    rinumera();
+  };
+  fr.readAsArrayBuffer(file);
+}
+function caricaFoglioFonte(f,nome){
+  f.foglio=nome; f.righe=leggiRighe(f.wb,nome);
+  f.hdr=titoliProbabili(f.righe); f.dat=f.hdr+1;
+  f.el.querySelector('.hdr').value=f.hdr;
+  f.el.querySelector('.dat').value=f.dat;
+  aggiornaFonte(f);
+}
+function aggiornaFonte(f){
+  f.cols=colonneDa(f.righe,f.hdr,f.dat);
+  f.sum=f.sum.filter(function(i){return i<f.cols.length;});
+  Object.keys(f.map).forEach(function(k){ if(f.map[k]>=f.cols.length) delete f.map[k]; });
+  grigliaIn(f.el.querySelector('.prev'),f.righe,f.hdr,f.dat,f.cols,function(r){
+    f.hdr=r; f.dat=r+1;
+    f.el.querySelector('.hdr').value=r; f.el.querySelector('.dat').value=r+1;
+    aggiornaFonte(f);
+  });
+  disegnaMappa(f); disegnaSomme(f); disegnaRegole(f);
+  verificaPronto();
+}
+
+function semplifica(s){ return String(s).toUpperCase().replace(/[^A-Z0-9]/g,""); }
+function disegnaMappa(f){
+  if(!f.el) return;
+  var box=f.el.querySelector('.mappa'); box.innerHTML="";
+  if(!f.cols.length){ box.innerHTML='<p class="nota" style="margin:0">Carica il file per vedere le colonne.</p>'; return; }
+  if(!P.keys.length){ box.innerHTML='<p class="nota" style="margin:0">Scegli prima le colonne chiave nel primo file.</p>'; return; }
+  P.keys.forEach(function(i1){
+    var c1=P.cols[i1]; if(!c1) return;
+    var riga=document.createElement("div"); riga.className="coppia";
+    var da=document.createElement("div"); da.className="da"; da.textContent=c1.nome; da.title=c1.nome;
+    var fr=document.createElement("div"); fr.className="freccia"; fr.textContent="→";
+    var sel=document.createElement("select");
+    var v=document.createElement("option"); v.value=""; v.textContent="— scegli —"; sel.appendChild(v);
+    f.cols.forEach(function(c2){
+      var o=document.createElement("option"); o.value=c2.i; o.textContent=c2.lettera+" · "+c2.nome; sel.appendChild(o);
+    });
+    if(f.map[i1]!==undefined) sel.value=String(f.map[i1]);
+    else{
+      var t=semplifica(c1.nome), trovata=null;
+      f.cols.forEach(function(c2){ if(trovata===null && semplifica(c2.nome)===t) trovata=c2.i; });
+      if(trovata!==null){ sel.value=String(trovata); f.map[i1]=trovata; }
+    }
+    sel.onchange=function(){
+      if(sel.value===""){ delete f.map[i1]; } else { f.map[i1]=Number(sel.value); }
+      disegnaRegole(f); verificaPronto();
+    };
+    riga.appendChild(da); riga.appendChild(fr); riga.appendChild(sel); box.appendChild(riga);
+  });
+}
+function disegnaSomme(f){
+  if(!f.el) return;
+  var box=f.el.querySelector('.somme'); box.innerHTML="";
+  f.cols.forEach(function(c){
+    var l=document.createElement("label");
+    var cb=document.createElement("input"); cb.type="checkbox"; cb.checked=f.sum.indexOf(c.i)>-1;
+    cb.onchange=function(){
+      if(cb.checked){ if(f.sum.indexOf(c.i)<0) f.sum.push(c.i); }
+      else f.sum=f.sum.filter(function(x){return x!==c.i;});
+      if(f.regole.some(function(rg){return rg.aperto;})) disegnaRegole(f);
+      verificaPronto();
+    };
+    var sp=document.createElement("span"); sp.className="lett"; sp.textContent=c.lettera;
+    var nm=document.createElement("span"); nm.className="nom"; nm.textContent=c.nome; nm.title=c.nome;
+    l.appendChild(cb); l.appendChild(sp); l.appendChild(nm); box.appendChild(l);
+  });
+}
+
+/* ---------- regole ---------- */
+function costruisciRegole(f,num){
+  var m={};
+  f.regole.forEach(function(rg){
+    if(rg.col===null||rg.col===undefined) return;
+    var a=chiave(rg.a,num); if(a==="") return;
+    if(!m[rg.col]) m[rg.col]={};
+    spezza(rg.da).forEach(function(d){ var k=chiave(d,num); if(k!=="") m[rg.col][k]=a; });
+  });
+  return m;
+}
+function chiaviRiga(f,riga,num,regole){
+  var grezze=[], finali=[];
+  P.keys.forEach(function(i1){
+    var v=chiave(riga[f.map[i1]],num);
+    grezze.push(v);
+    finali.push(regole[i1]&&regole[i1][v]!==undefined?regole[i1][v]:v);
+  });
+  return {grezze:grezze,finali:finali};
+}
+function codiciSenzaRiscontro(f,i1){
+  var num=numerico(), dentro={};
+  for(var r=P.dat-1;r<P.righe.length;r++){
+    var v=chiave((P.righe[r]||[])[i1],num);
+    if(v!=="") dentro[v]=true;
+  }
+  var visti={}, fuori=[], c2=f.map[i1];
+  for(var r2=f.dat-1;r2<f.righe.length;r2++){
+    var riga=f.righe[r2]||[];
+    var w=chiave(riga[c2],num);
+    if(w===""||dentro[w]) continue;
+    var t=0; f.sum.forEach(function(cs){ t+=numero(riga[cs]); });
+    if(visti[w]===undefined){ visti[w]=fuori.length; fuori.push({v:w,tot:0}); }
+    fuori[visti[w]].tot+=t;
+  }
+  fuori.sort(function(x,y){return y.tot-x.tot;});
+  return fuori;
+}
+function disegnaRegole(f){
+  if(!f.el) return;
+  var box=f.el.querySelector('.regole');
+  f.regole=f.regole.filter(function(rg){return rg.col===null||P.keys.indexOf(rg.col)>-1;});
+  box.innerHTML="";
+  if(!P.keys.length){ box.innerHTML='<p class="nota" style="margin:0">Scegli prima le colonne chiave nel primo file.</p>'; return; }
+  if(!f.regole.length){ box.innerHTML='<p class="nota" style="margin:0">Nessuna regola: i codici vengono confrontati così come sono.</p>'; return; }
+
+  f.regole.forEach(function(rg){
+    var d=document.createElement("div"); d.className="regola";
+    var testa=document.createElement("div"); testa.className="testa";
+
+    var sel=document.createElement("select");
+    P.keys.forEach(function(i1){
+      var c1=P.cols[i1]; if(!c1) return;
+      var o=document.createElement("option"); o.value=i1; o.textContent=c1.nome; sel.appendChild(o);
+    });
+    if(rg.col===null||P.keys.indexOf(rg.col)<0) rg.col=P.keys[0];
+    sel.value=String(rg.col);
+    sel.onchange=function(){ rg.col=Number(sel.value); rg.aperto=false; disegnaRegole(f); };
+
+    var da=document.createElement("input"); da.type="text"; da.value=rg.da||"";
+    da.placeholder="codici da aggregare";
+    da.oninput=function(){ rg.da=da.value; piedeAgg(); };
+
+    var fre=document.createElement("div"); fre.className="freccia"; fre.textContent="→";
+
+    var a=document.createElement("input"); a.type="text"; a.value=rg.a||"";
+    a.placeholder="nuovo codice";
+    a.oninput=function(){ rg.a=a.value; piedeAgg(); };
+
+    var via=document.createElement("button");
+    via.type="button"; via.className="via"; via.textContent="×"; via.title="Elimina la regola";
+    via.onclick=function(){ f.regole=f.regole.filter(function(x){return x!==rg;}); disegnaRegole(f); riassuntoFonte(f); };
+
+    testa.appendChild(sel); testa.appendChild(da); testa.appendChild(fre); testa.appendChild(a); testa.appendChild(via);
+    d.appendChild(testa);
+
+    var piede=document.createElement("div"); piede.className="piede";
+    var link=document.createElement("a"); link.tabIndex=0; link.setAttribute("role","button");
+    var conta=document.createElement("span");
+    piede.appendChild(link); piede.appendChild(conta); d.appendChild(piede);
+
+    var gettoni=document.createElement("div"); gettoni.className="gettoni chiuso"; d.appendChild(gettoni);
+
+    function piedeAgg(){
+      var n=spezza(rg.da).length;
+      conta.textContent = n ? (n+" codic"+(n===1?"e":"i")+" → "+(String(rg.a||"").trim()||"nessun codice di arrivo")) : "";
+    }
+    function testoLink(){ link.textContent = rg.aperto ? "nascondi i codici senza corrispondenza" : "mostra i codici senza corrispondenza"; }
+    function riempi(){
+      gettoni.innerHTML="";
+      if(f.map[rg.col]===undefined){
+        gettoni.innerHTML='<span class="nota" style="margin:0">Scegli prima la colonna corrispondente in questo file.</span>'; return;
+      }
+      var fuori=codiciSenzaRiscontro(f,rg.col);
+      if(!fuori.length){
+        gettoni.innerHTML='<span class="nota" style="margin:0">Ogni codice di questa colonna ha già una corrispondenza nel primo file.</span>'; return;
+      }
+      if(!f.sum.length){
+        var av=document.createElement("span"); av.className="nota"; av.style.margin="0";
+        av.textContent="Spunta le colonne da sommare per vedere quanti posti pesa ogni codice.";
+        gettoni.appendChild(av);
+      }
+      var num=numerico(), presi={};
+      spezza(rg.da).forEach(function(x){ presi[chiave(x,num)]=true; });
+      fuori.forEach(function(o){
+        var g=document.createElement("button");
+        g.type="button"; g.className="gettone"+(presi[o.v]?" presa":"");
+        g.textContent=o.tot?(o.v+" · "+itn(o.tot)):o.v;
+        g.title=o.tot?(o.tot+" posti da sottrarre su questo codice"):"nessun posto da sottrarre su questo codice";
+        g.onclick=function(){
+          var lista=spezza(rg.da).filter(function(x){return chiave(x,num)!==o.v;});
+          if(!presi[o.v]) lista.push(o.v);
+          rg.da=lista.join(" "); da.value=rg.da; piedeAgg(); riempi();
+        };
+        gettoni.appendChild(g);
+      });
+    }
+    function commuta(){
+      rg.aperto=!rg.aperto; testoLink();
+      if(rg.aperto){ gettoni.classList.remove('chiuso'); riempi(); }
+      else gettoni.classList.add('chiuso');
+    }
+    link.onclick=commuta;
+    link.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); commuta(); } };
+    testoLink(); piedeAgg();
+    if(rg.aperto){ gettoni.classList.remove('chiuso'); riempi(); }
+
+    box.appendChild(d);
+  });
+}
+
+/* ---------- pronto? ---------- */
+function fontePronta(f){
+  return !!(f.wb && f.sum.length>0 && P.keys.length>0 && P.keys.every(function(i){return f.map[i]!==undefined;}));
+}
+function verificaPronto(){
+  riassuntoPrimo();
+  FONTI.forEach(riassuntoFonte);
+  var caricate=FONTI.filter(function(f){return f.wb;});
+  var ok = P.wb && P.keys.length>0 && P.val!==null && caricate.length>0 && caricate.every(fontePronta);
+  $('btnCalcola').disabled=!ok;
+  var manca=[];
+  if(!P.wb) manca.push("carica il file dei posti disponibili");
+  else{
+    if(!P.keys.length) manca.push("scegli le colonne chiave");
+    if(P.val===null) manca.push("scegli la colonna del totale");
+  }
+  if(P.wb && !caricate.length) manca.push("carica almeno un file da sottrarre");
+  caricate.forEach(function(f){
+    var eti=FONTI.length>1?("file "+(FONTI.indexOf(f)+1)):"secondo file";
+    if(P.keys.length && !P.keys.every(function(k){return f.map[k]!==undefined;})) manca.push("abbina le chiavi nel "+eti);
+    if(!f.sum.length) manca.push("scegli le colonne da sommare nel "+eti);
+  });
+  $('statoCalcolo').innerHTML = ok
+    ? "Tutto pronto: "+caricate.length+" fil"+(caricate.length===1?"e":"i")+" da sottrarre."
+    : '<span class="manca">Da fare: '+manca.join(" · ")+'.</span>';
+  rotaia();
+}
+
+/* ---------- etichette ---------- */
+function etichette(){
+  var usate={}, out=[];
+  FONTI.filter(function(f){return f.wb;}).forEach(function(f,i){
+    var base=String(f.nome||("file "+(i+2))).replace(/\.[^.]+$/,"");
+    if(base.length>22) base=base.slice(0,21)+"…";
+    if(usate[base]!==undefined){ usate[base]++; base=base+" ("+usate[base]+")"; }
+    else usate[base]=1;
+    out.push({f:f,eti:base});
+  });
+  return out;
+}
+
+/* ---------- calcolo ---------- */
+function calcola(){
+  var num=numerico();
+  var attive=etichette();
+
+  attive.forEach(function(x){
+    var f=x.f;
+    var colSum=f.sum.slice().sort(function(a,b){return a-b;});
+    var regole=costruisciRegole(f,num);
+    var agg={}, ordine=[], nRiscritte=0;
+    for(var r=f.dat-1;r<f.righe.length;r++){
+      var riga=f.righe[r]||[];
+      var kk=chiaviRiga(f,riga,num,regole);
+      if(kk.finali.some(function(p){return p==="";})) continue;
+      var k=kk.finali.join("\u0001");
+      if(!agg[k]){ agg[k]={valori:colSum.map(function(){return 0;}),righe:[],parti:kk.finali,origini:{}}; ordine.push(k); }
+      for(var j=0;j<colSum.length;j++) agg[k].valori[j]+=numero(riga[colSum[j]]);
+      agg[k].righe.push(r+1);
+      agg[k].origini[kk.grezze.join(" / ")]=true;
+      if(kk.grezze.join("\u0001")!==k) nRiscritte++;
+    }
+    x.colSum=colSum;
+    x.nomi=colSum.map(function(i){return f.cols[i].nome;});
+    x.agg=agg; x.ordine=ordine; x.nRiscritte=nRiscritte; x.usate={};
+  });
+
+  var dett=[];
+  attive.forEach(function(x){
+    x.nomi.forEach(function(n,j){
+      dett.push({eti:x.eti,nome:n,x:x,j:j,titolo:(attive.length>1?(x.eti+" · "+n):n)});
+    });
+  });
+
+  var out=[], totDisp=0, nNeg=0, nToccate=0;
+  for(var r1=P.dat-1;r1<P.righe.length;r1++){
+    var rg=P.righe[r1]||[];
+    if(rg.every(function(c){return c===null||c===undefined||String(c).trim()==="";})) continue;
+    var p1=P.keys.map(function(i1){return chiave(rg[i1],num);});
+    var k1=p1.join("\u0001");
+    var valori=[], sub=0, toccata=false;
+    attive.forEach(function(x){
+      var v=x.agg[k1];
+      if(v){ x.usate[k1]=true; toccata=true; }
+      x.colSum.forEach(function(_,j){ var q=v?v.valori[j]:0; valori.push(q); sub+=q; });
+    });
+    var disp=numero(rg[P.val]);
+    var netto=disp-sub;
+    if(netto<0) nNeg++;
+    if(toccata) nToccate++;
+    totDisp+=disp;
+    out.push({riga:r1+1,dati:rg,chiavi:p1,valori:valori,sub:sub,disp:disp,netto:netto,toccata:toccata});
+  }
+
+  var orfane=[], totOrf=0, nRiscritte=0;
+  attive.forEach(function(x){
+    nRiscritte+=x.nRiscritte;
+    x.ordine.forEach(function(k){
+      if(x.usate[k]) return;
+      var tot=x.agg[k].valori.reduce(function(a,b){return a+b;},0);
+      if(tot<=0) return;
+      orfane.push({eti:x.eti,parti:x.agg[k].parti,valori:x.agg[k].valori,nomi:x.nomi,
+                   tot:tot,righe:x.agg[k].righe,origini:Object.keys(x.agg[k].origini)});
+      totOrf+=tot;
+    });
+  });
+
+  RES={out:out,orfane:orfane,dett:dett,attive:attive,totDisp:totDisp,totOrf:totOrf,
+       nNeg:nNeg,nToccate:nToccate,nRiscritte:nRiscritte,numerico:num};
+
+  FONTI.forEach(function(f){ if(fontePronta(f)) piega(f.el,true); });
+  piega($('carta1'),true);
+  mostraRisultato();
+  rotaia();
+  $('cartaEsito').scrollIntoView({block:"start"});
+}
+
+function azzeraNeg(){ return document.querySelector('input[name=neg]:checked').value==="azzera"; }
+function nettoDi(r){ return azzeraNeg()&&r.netto<0 ? 0 : r.netto; }
+
+function mostraRisultato(){
+  $('cartaEsito').classList.remove('chiuso');
+  var netti=RES.out.reduce(function(a,r){return a+nettoDi(r);},0);
+
+  $('rTot').textContent=itn(RES.totDisp);
+  $('rSub').textContent=itn(RES.totDisp-netti);
+  $('rNet').textContent=itn(netti);
+  $('registro').classList.add('su');
+  $('riassEsito').innerHTML="<b>"+itn(RES.totDisp)+"</b> disponibili − <b>"+itn(RES.totDisp-netti)+"</b> sottratti = <b>"+itn(netti)+"</b> netti";
+
+  var res=$('rResto');
+  if(RES.totOrf>0){
+    res.classList.remove('chiuso');
+    res.textContent=itn(RES.totOrf)+" posti non sottratti: "+RES.orfane.length+" chiavi non esistono nel primo file.";
+  } else res.classList.add('chiuso');
+
+  var c=$('targhe'); c.innerHTML="";
+  function targa(n,testo,cls){
+    var d=document.createElement("div"); d.className="targa"+(cls?" "+cls:"");
+    d.innerHTML="<b>"+n+"</b>"+testo; c.appendChild(d);
+  }
+  targa(itn(RES.attive.length),"fil"+(RES.attive.length===1?"e":"i")+" sottratt"+(RES.attive.length===1?"o":"i"));
+  targa(itn(RES.out.length),"righe in tutto");
+  targa(itn(RES.nToccate),"righe toccate",RES.nToccate?"buona":"");
+  targa(itn(RES.out.length-RES.nToccate),"righe intatte");
+  if(RES.nRiscritte) targa(itn(RES.nRiscritte),"righe riscritte");
+  if(RES.nNeg) targa(itn(RES.nNeg),"righe negative","allarme");
+  if(RES.orfane.length) targa(itn(RES.orfane.length),"chiavi orfane","allarme");
+
+  var m=$('messaggi'); m.innerHTML="";
+  function msg(html,cls){ var d=document.createElement("div"); d.className="avviso"+(cls?" "+cls:""); d.innerHTML=html; m.appendChild(d); }
+  if(RES.attive.length>1){
+    var righe=RES.attive.map(function(x){
+      var suo=RES.out.reduce(function(a,r){
+        var s=0; RES.dett.forEach(function(dc,i){ if(dc.x===x) s+=r.valori[i]; }); return a+s;
+      },0);
+      return "<b>"+x.eti+"</b> "+itn(suo);
+    });
+    msg("Posti sottratti da ciascun file: "+righe.join("  ·  "),"ambra");
+  }
+  if(RES.nNeg) msg("In "+RES.nNeg+" righe i posti da sottrarre superano quelli disponibili. Scegli qui sotto come trattarle; con il filtro puoi isolarle.");
+  if(RES.orfane.length) msg(RES.orfane.length+" chiavi con valori maggiori di zero non compaiono nel primo file, per un totale di "+itn(RES.totOrf)+" posti che non vengono sottratti a nessuna riga. Le trovi nel foglio NON_ABBINATE dell'Excel.","ambra");
+
+  disegnaTabella();
+  preparaSql();
+}
+
+function disegnaTabella(){
+  var f=$('filtro').value;
+  var righe=RES.out.filter(function(r){
+    if(f==="variate") return r.sub!==0;
+    if(f==="neg") return r.netto<0;
+    if(f==="nonabb") return !r.toccata;
+    return true;
+  });
+  var mostra=righe.slice(0,300);
+  var t=document.createElement("table");
+  var th=document.createElement("thead"), tr=document.createElement("tr");
+  ["riga"].concat(P.keys.map(function(i){return P.cols[i].nome;}))
+    .concat([P.cols[P.val].nome])
+    .concat(RES.dett.map(function(d){return d.titolo;}))
+    .concat(["sottratti","netto","esito"])
+    .forEach(function(h){ var c=document.createElement("th"); c.textContent=h; tr.appendChild(c); });
+  th.appendChild(tr); t.appendChild(th);
+  var tb=document.createElement("tbody");
+  mostra.forEach(function(r){
+    var tr2=document.createElement("tr");
+    if(r.netto<0) tr2.className="neg"; else if(!r.toccata) tr2.className="intatta";
+    [r.riga].concat(r.chiavi).concat([r.disp]).concat(r.valori)
+      .concat([r.sub,nettoDi(r),r.toccata?"toccata":"intatta"])
+      .forEach(function(v){
+        var td=document.createElement("td");
+        if(typeof v==="number"){ td.className="num"; td.textContent=itn(v); } else td.textContent=v;
+        tr2.appendChild(td);
+      });
+    tb.appendChild(tr2);
+  });
+  t.appendChild(tb);
+  $('tabella').innerHTML=""; $('tabella').appendChild(t);
+  $('contaRighe').textContent=righe.length+" righe nel filtro"+(righe.length>300?", ne vedi le prime 300 — l'Excel le contiene tutte":"")+".";
+}
+
+/* ---------- Excel ---------- */
+function esporta(){
+  if(!RES) return;
+  var wb=XLSX.utils.book_new();
+  var nomiKey=P.keys.map(function(i){return P.cols[i].nome;});
+  var nomeVal=P.cols[P.val].nome;
+  var netti=RES.out.reduce(function(a,r){return a+nettoDi(r);},0);
+
+  var intestOrig=P.cols.map(function(c){return c.nome;});
+  var nuove=RES.dett.map(function(d){return "DA_SOTTRARRE · "+d.titolo;})
+    .concat(["TOT_DA_SOTTRARRE",nomeVal+" NETTO","ESITO","CONTROLLO"]);
+  var aoa=[intestOrig.concat(nuove)];
+  RES.out.forEach(function(r){
+    var base=[];
+    for(var c=0;c<P.cols.length;c++){ var v=r.dati[c]; base.push(v===undefined?null:v); }
+    var n=nettoDi(r);
+    aoa.push(base.concat(r.valori).concat([r.sub,n,
+      r.toccata?"TOCCATA":"NESSUN FILE LA TOCCA",
+      r.netto<0?(azzeraNeg()?"NEGATIVO AZZERATO ("+r.netto+")":"NEGATIVO — da verificare"):""]));
+  });
+  aoa.push([]);
+  var totRow=new Array(P.cols.length).fill(null);
+  totRow[0]="TOTALE"; totRow[P.val]=RES.totDisp;
+  RES.dett.forEach(function(_,i){ totRow.push(RES.out.reduce(function(a,r){return a+r.valori[i];},0)); });
+  totRow.push(RES.out.reduce(function(a,r){return a+r.sub;},0)); totRow.push(netti);
+  aoa.push(totRow);
+  var ws1=XLSX.utils.aoa_to_sheet(aoa);
+  ws1['!cols']=intestOrig.concat(nuove).map(function(h){return {wch:Math.min(40,Math.max(12,String(h).length+2))};});
+  XLSX.utils.book_append_sheet(wb,ws1,"RISULTATO");
+
+  var aoa2=[["FILE","RIGHE_NEL_FILE"].concat(nomiKey).concat(["CODICI_DI_ORIGINE","DETTAGLIO","TOT_NON_SOTTRATTO"])];
+  RES.orfane.forEach(function(o){
+    var org=o.origini.join("; ");
+    if(org===o.parti.join(" / ")) org="";
+    aoa2.push([o.eti,o.righe.join(", ")].concat(o.parti)
+      .concat([org,o.nomi.map(function(n,j){return n+": "+o.valori[j];}).join("; "),o.tot]));
+  });
+  if(RES.orfane.length){
+    aoa2.push([]);
+    aoa2.push(["TOTALE",null].concat(nomiKey.map(function(){return null;})).concat([null,null,RES.totOrf]));
+  }
+  var ws2=XLSX.utils.aoa_to_sheet(aoa2);
+  ws2['!cols']=aoa2[0].map(function(h){return {wch:Math.min(46,Math.max(14,String(h).length+2))};});
+  XLSX.utils.book_append_sheet(wb,ws2,"NON_ABBINATE");
+
+  var d=new Date();
+  var aoa3=[
+    ["Riconciliazione posti",""],
+    ["Elaborato il",d.toLocaleString('it-IT')],
+    [],
+    ["PRIMO FILE — posti disponibili",P.nome],
+    ["Foglio",P.foglio],
+    ["Riga dei titoli / prima riga di dati",P.hdr+" / "+P.dat],
+    ["Colonne chiave",nomiKey.join(" + ")],
+    ["Colonna del totale",nomeVal],
+    []
+  ];
+  RES.attive.forEach(function(x,i){
+    var f=x.f;
+    aoa3.push(["FILE DA SOTTRARRE "+(i+1),f.nome]);
+    aoa3.push(["Etichetta usata nelle colonne",x.eti]);
+    aoa3.push(["Foglio",f.foglio]);
+    aoa3.push(["Riga dei titoli / prima riga di dati",f.hdr+" / "+f.dat]);
+    aoa3.push(["Colonne chiave",P.keys.map(function(k){return f.cols[f.map[k]].nome;}).join(" + ")]);
+    aoa3.push(["Colonne sommate",x.nomi.join(" + ")]);
+    if(f.regole.length){
+      f.regole.forEach(function(rg){
+        var c=P.cols[rg.col];
+        aoa3.push(["Regola di aggregazione — "+(c?c.nome:"?"),spezza(rg.da).join(", ")+"  →  "+String(rg.a||"").trim()]);
+      });
+      aoa3.push(["Righe con codice riscritto",x.nRiscritte]);
+    }
+    aoa3.push([]);
+  });
+  aoa3=aoa3.concat([
+    ["Confronto dei codici come numeri",RES.numerico?"sì":"no"],
+    ["Valori negativi",azzeraNeg()?"azzerati a 0":"lasciati negativi"],
+    ["Celle vuote, trattini e testo","valgono 0"],
+    [],
+    ["Totale disponibili",RES.totDisp],
+    ["Totale sottratto",RES.totDisp-netti],
+    ["Totale netto",netti],
+    ["Righe toccate da almeno un file",RES.nToccate],
+    ["Righe che nessun file tocca",RES.out.length-RES.nToccate],
+    ["Righe con netto negativo",RES.nNeg],
+    ["Chiavi senza corrispondenza",RES.orfane.length],
+    ["Posti non sottratti per mancata corrispondenza",RES.totOrf]
+  ]);
+  var ws3=XLSX.utils.aoa_to_sheet(aoa3);
+  ws3['!cols']=[{wch:46},{wch:56}];
+  XLSX.utils.book_append_sheet(wb,ws3,"RIEPILOGO");
+
+  var p=function(x){return String(x).padStart(2,"0");};
+  XLSX.writeFile(wb,"riconciliazione_"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes())+".xlsx");
+}
+
+/* ---------- script SQL ---------- */
+function testoCella(v){
+  if(v===null||v===undefined) return "";
+  if(typeof v==="number") return String(v);
+  return String(v).trim();
+}
+function apice(s){ return "'"+String(s).replace(/'/g,"''")+"'"; }
+function scarica(testo,nome){
+  var b=new Blob([testo],{type:"text/plain;charset=utf-8"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(b); a.download=nome;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); if(a.parentNode) a.parentNode.removeChild(a); },0);
+}
+function preparaSql(){
+  var s1=$('sqlSede'), s2=$('sqlQual');
+  if(s1.options.length!==P.cols.length){
+    [s1,s2].forEach(function(s){
+      s.innerHTML="";
+      P.cols.forEach(function(c){
+        var o=document.createElement("option"); o.value=c.i; o.textContent=c.lettera+" · "+c.nome; s.appendChild(o);
+      });
+    });
+    s1.value=String(P.keys.length?P.keys[0]:0);
+    s2.value=String(P.keys.length>1?P.keys[1]:(P.keys.length?P.keys[0]:0));
+  }
+  anteprimaSql();
+}
+function istruzioniSql(tabella){
+  var cs=Number($('sqlSede').value), cq=Number($('sqlQual').value);
+  var soloPos=$('sqlPositivi').checked;
+  var bando=String($('sqlBando').value).trim();
+  if(!/^-?\d+$/.test(bando)) bando=apice(bando);
+  var out=[], saltate=0, virgolettate=0;
+  RES.out.forEach(function(r){
+    var n=nettoDi(r);
+    if(soloPos && !(n>0)) return;
+    var sede=testoCella(r.dati[cs]), qual=testoCella(r.dati[cq]);
+    if(sede===""||qual===""){ saltate++; return; }
+    if(!/^-?\d+$/.test(qual)){ qual=apice(qual); virgolettate++; }
+    out.push("INSERT INTO MOBINT."+tabella+" (ID, ID_BANDO, CODICE_SEDE, ID_QUALIFICA, N_POSTI_ENTRATA) VALUES "+
+             "((SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT."+tabella+"),"+bando+","+apice(sede)+","+qual+","+n+");");
+  });
+  return {righe:out,saltate:saltate,virgolettate:virgolettate,bando:bando};
+}
+function anteprimaSql(){
+  if(!RES) return;
+  var o=istruzioniSql("SEDI_BANDO_ORDINARIO");
+  var pre=$('sqlPrev');
+  if(!o.righe.length) pre.innerHTML='<span class="off">Con i criteri attuali non c\'è nessuna riga da inserire.</span>';
+  else pre.textContent=o.righe[0];
+  var note=[o.righe.length+" INSERT per ciascuno dei due script"];
+  if(o.saltate) note.push(o.saltate+" righe saltate: manca il codice sede o la qualifica");
+  if(o.virgolettate) note.push(o.virgolettate+" qualifiche non numeriche, scritte fra apici");
+  $('sqlConta').textContent=note.join(" · ")+".";
+}
+function generaSql(tabella,nomeBase){
+  if(!RES) return;
+  var o=istruzioniSql(tabella);
+  if(!o.righe.length){ alert("Con i criteri attuali non c'è nessuna riga da inserire."); return; }
+  var d=new Date(), p=function(x){return String(x).padStart(2,"0");};
+  var testa=[
+    "-- "+nomeBase+" — generato il "+d.toLocaleString('it-IT'),
+    "-- Tabella: MOBINT."+tabella+"   ID_BANDO: "+o.bando,
+    "-- Posti disponibili: "+P.nome+" ("+P.foglio+"), colonna "+P.cols[P.val].nome,
+    "-- Sottratti da: "+RES.attive.map(function(x){return x.f.nome+" ("+x.nomi.join(" + ")+")";}).join(" | "),
+    "-- N_POSTI_ENTRATA = netto dopo la sottrazione"+($('sqlPositivi').checked?", solo righe con almeno un posto":""),
+    "-- Istruzioni: "+o.righe.length,
+    ""
+  ];
+  scarica(testa.concat(o.righe).join("\r\n")+"\r\n",
+    nomeBase.toLowerCase()+"_"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes())+".sql");
+}
+
+/* ---------- collegamenti ---------- */
+(function(){
+  var dep=$('dep1'), inp=$('inp1');
+  dep.onclick=function(){inp.click();};
+  dep.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();inp.click();}};
+  dep.ondragover=function(e){e.preventDefault();dep.classList.add('sopra');};
+  dep.ondragleave=function(){dep.classList.remove('sopra');};
+  dep.ondrop=function(e){e.preventDefault();dep.classList.remove('sopra');if(e.dataTransfer.files[0]) leggiPrimo(e.dataTransfer.files[0]);};
+  inp.onchange=function(){ if(inp.files[0]) leggiPrimo(inp.files[0]); };
+  $('foglio1').onchange=function(){ caricaFoglioPrimo(this.value); };
+  $('hdr1').onchange=function(){
+    var v=Math.max(1,Number(this.value)||1); P.hdr=v; this.value=v;
+    if(P.dat<=v){ P.dat=v+1; $('dat1').value=v+1; }
+    aggiornaPrimo();
+  };
+  $('dat1').onchange=function(){ var v=Math.max(2,Number(this.value)||2); P.dat=v; this.value=v; aggiornaPrimo(); };
+  $('piega1').onclick=function(){ piega($('carta1'),!$('carta1').classList.contains('piegata')); };
+})();
+
+$('piuFonte').onclick=function(){
+  var f=nuovaFonte();
+  f.el.scrollIntoView({block:"start"});
+};
+$('optNum').onchange=function(){ FONTI.forEach(disegnaRegole); if(RES) calcola(); };
+$('btnCalcola').onclick=calcola;
+$('btnExport').onclick=esporta;
+$('btnExport2').onclick=esporta;
+$('filtro').onchange=disegnaTabella;
+Array.prototype.forEach.call(document.querySelectorAll('input[name=neg]'),function(r){
+  r.onchange=function(){ if(RES) mostraRisultato(); };
+});
+$('btnSqlOrd').onclick=function(){ generaSql("SEDI_BANDO_ORDINARIO","SCRIPT_ORDINARIO"); };
+$('btnSql104').onclick=function(){ generaSql("SEDI_BANDO_104","SCRIPT_104"); };
+['sqlBando','sqlSede','sqlQual','sqlPositivi'].forEach(function(id){ $(id).onchange=anteprimaSql; });
+$('sqlBando').oninput=anteprimaSql;
+$('btnReset').onclick=function(){ location.reload(); };
+
+nuovaFonte();
+verificaPronto();
+
+})();
+</script>
+</body>
+</html>
