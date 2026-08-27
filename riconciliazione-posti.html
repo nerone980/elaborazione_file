@@ -1212,7 +1212,7 @@ function esporta(){
     var base=colsExp.map(function(c){ var v=r.dati[c.i]; return v===undefined?null:v; });
     var n=nettoDi(r);
     aoa.push(base.concat(r.valori).concat([r.sub,n,
-      r.toccata?"MODIFICATA":"NON MODIFICATA",
+      r.sub!==0?"MODIFICATA":"NON MODIFICATA",
       r.netto<0?(azzeraNeg()?"NEGATIVO AZZERATO ("+r.netto+")":"NEGATIVO — da verificare"):""]));
   });
   aoa.push([]);
