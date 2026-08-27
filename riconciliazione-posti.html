@@ -238,7 +238,7 @@ button.minuto:hover:not(:disabled){background:var(--alto);color:var(--testo);bor
   </header>
 
   <div id="allarmeLib" class="avviso chiuso">
-    <b>Libreria Excel non caricata.</b> Al primo avvio serve la connessione a internet. In alternativa scarica <code>xlsx.full.min.js</code> dal sito SheetJS, mettilo accanto a questo file e sostituisci l'indirizzo nello <code>&lt;script&gt;</code> in fondo all'HTML.
+    <b>Libreria Excel non caricata.</b> Al primo avvio serve la connessione a internet. In alternativa scarica <code>xlsx.min.js</code> dal pacchetto <code>xlsx-js-style</code> (serve per colorare le celle modificate nell'Excel), mettilo accanto a questo file e sostituisci l'indirizzo nello <code>&lt;script&gt;</code> in fondo all'HTML.
   </div>
 
   <!-- ============ 1 ============ -->
@@ -346,7 +346,13 @@ button.minuto:hover:not(:disabled){background:var(--alto);color:var(--testo);bor
       <div class="tabella" id="tabella"></div>
       <p class="nota" id="contaRighe"></p>
 
-      <div class="azioni" style="margin-top:0">
+      <div class="sezione">
+        <span class="etichetta">Colonne del primo file nell'Excel</span>
+        <p class="aiuto" style="margin:8px 0 12px">Le colonne calcolate (dettaglio delle sottrazioni, netto, esito) sono sempre incluse nel foglio RISULTATO. Scegli anche quali colonne originali del primo file portare con sé. Nell'Excel, le celle con una sottrazione effettiva sono evidenziate in ambra; il netto negativo in rosso.</p>
+        <div class="elenco" id="colOut"></div>
+      </div>
+
+      <div class="azioni" style="margin-top:20px">
         <button id="btnExport">Scarica l'Excel</button>
         <button id="btnReset" class="calmo">Ricomincia</button>
       </div>
@@ -395,13 +401,13 @@ button.minuto:hover:not(:disabled){background:var(--alto);color:var(--testo);bor
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"
         onerror="document.getElementById('allarmeLib').classList.remove('chiuso')"></script>
 <script>
 (function(){
 "use strict";
 
-var P = {nome:null,wb:null,foglio:null,righe:[],hdr:1,dat:2,cols:[],keys:[],val:null};
+var P = {nome:null,wb:null,foglio:null,righe:[],hdr:1,dat:2,cols:[],keys:[],val:null,outCols:null,outColsMax:0};
 var FONTI = [];
 var RES = null;
 var SEQ = 0;
@@ -574,14 +580,50 @@ function caricaFoglioPrimo(f){
   $('hdr1').value=P.hdr; $('dat1').value=P.dat;
   aggiornaPrimo();
 }
+function sincronizzaOutCols(){
+  var eraDefinito=!!P.outCols;
+  var vecchi={}; (P.outCols||[]).forEach(function(i){ vecchi[i]=true; });
+  var maxPrec=P.outColsMax||0;
+  P.outCols=P.cols.map(function(c){return c.i;}).filter(function(i){
+    return !eraDefinito || vecchi[i]!==undefined || i>=maxPrec;
+  });
+  P.outColsMax=P.cols.length;
+}
+function colonneEsportate(){
+  var forzate={};
+  P.keys.forEach(function(i){ forzate[i]=true; });
+  if(P.val!==null) forzate[P.val]=true;
+  return P.cols.filter(function(c){ return forzate[c.i] || P.outCols.indexOf(c.i)>-1; });
+}
+function disegnaColOut(){
+  var box=$('colOut'); box.innerHTML="";
+  if(!P.cols.length){ box.innerHTML='<p class="nota" style="margin:0">Carica il file per vedere le colonne.</p>'; return; }
+  P.cols.forEach(function(c){
+    var forzata = P.keys.indexOf(c.i)>-1 || c.i===P.val;
+    var l=document.createElement("label");
+    var cb=document.createElement("input"); cb.type="checkbox";
+    cb.checked = forzata || P.outCols.indexOf(c.i)>-1;
+    cb.disabled = forzata;
+    cb.onchange=function(){
+      if(cb.checked){ if(P.outCols.indexOf(c.i)<0) P.outCols.push(c.i); }
+      else P.outCols=P.outCols.filter(function(x){return x!==c.i;});
+    };
+    var sp=document.createElement("span"); sp.className="lett"; sp.textContent=c.lettera;
+    var nm=document.createElement("span"); nm.className="nom";
+    nm.textContent=c.nome+(forzata?(P.keys.indexOf(c.i)>-1?" (chiave)":" (totale)"):"");
+    nm.title=c.nome;
+    l.appendChild(cb); l.appendChild(sp); l.appendChild(nm); box.appendChild(l);
+  });
+}
 function aggiornaPrimo(){
   P.cols=colonneDa(P.righe,P.hdr,P.dat);
   P.keys=P.keys.filter(function(i){return i<P.cols.length;});
   if(P.val!==null && P.val>=P.cols.length) P.val=null;
+  sincronizzaOutCols();
   grigliaIn($('prev1'),P.righe,P.hdr,P.dat,P.cols,function(r){
     P.hdr=r; P.dat=r+1; $('hdr1').value=r; $('dat1').value=r+1; aggiornaPrimo();
   });
-  disegnaChiavi1(); disegnaValore1();
+  disegnaChiavi1(); disegnaValore1(); disegnaColOut();
   FONTI.forEach(function(f){ disegnaMappa(f); disegnaRegole(f); riassuntoFonte(f); });
   verificaPronto();
 }
@@ -593,6 +635,7 @@ function disegnaChiavi1(){
     cb.onchange=function(){
       if(cb.checked){ if(P.keys.indexOf(c.i)<0) P.keys.push(c.i); }
       else P.keys=P.keys.filter(function(x){return x!==c.i;});
+      disegnaColOut();
       FONTI.forEach(function(f){ disegnaMappa(f); disegnaRegole(f); riassuntoFonte(f); });
       verificaPronto();
     };
@@ -608,7 +651,7 @@ function disegnaValore1(){
     var o=document.createElement("option"); o.value=c.i; o.textContent=c.lettera+" · "+c.nome; sel.appendChild(o);
   });
   sel.value=P.val===null?"":String(P.val);
-  sel.onchange=function(){ P.val=sel.value===""?null:Number(sel.value); verificaPronto(); };
+  sel.onchange=function(){ P.val=sel.value===""?null:Number(sel.value); disegnaColOut(); verificaPronto(); };
 }
 
 /* ================= FILE DA SOTTRARRE ================= */
@@ -1122,6 +1165,35 @@ function disegnaTabella(){
 }
 
 /* ---------- Excel ---------- */
+function evidenziaModifiche(ws,base){
+  if(typeof XLSX.utils.encode_cell!=="function") return;
+  var stileModifica={fill:{patternType:"solid",fgColor:{rgb:"FFE3A83C"}}};
+  var stileNegativo={fill:{patternType:"solid",fgColor:{rgb:"FFEC7663"}}};
+  var stileTesta={font:{bold:true},fill:{patternType:"solid",fgColor:{rgb:"FFEFEFEF"}}};
+  var nDett=RES.dett.length, iTot=base+nDett, iNetto=iTot+1, iFine=iNetto+2;
+  for(var c=base;c<=iFine;c++){
+    var addr=XLSX.utils.encode_cell({r:0,c:c});
+    if(ws[addr]) ws[addr].s=stileTesta;
+  }
+  RES.out.forEach(function(r,ri){
+    var riga=ri+1;
+    for(var j=0;j<nDett;j++){
+      if(r.valori[j]>0){
+        var addr=XLSX.utils.encode_cell({r:riga,c:base+j});
+        if(ws[addr]) ws[addr].s=stileModifica;
+      }
+    }
+    if(r.sub!==0){
+      var addrTot=XLSX.utils.encode_cell({r:riga,c:iTot});
+      if(ws[addrTot]) ws[addrTot].s=stileModifica;
+    }
+    var addrNetto=XLSX.utils.encode_cell({r:riga,c:iNetto});
+    if(ws[addrNetto]){
+      if(r.netto<0) ws[addrNetto].s=stileNegativo;
+      else if(r.sub!==0) ws[addrNetto].s=stileModifica;
+    }
+  });
+}
 function esporta(){
   if(!RES) return;
   var wb=XLSX.utils.book_new();
@@ -1129,26 +1201,30 @@ function esporta(){
   var nomeVal=P.cols[P.val].nome;
   var netti=RES.out.reduce(function(a,r){return a+nettoDi(r);},0);
 
-  var intestOrig=P.cols.map(function(c){return c.nome;});
+  var colsExp=colonneEsportate();
+  var intestOrig=colsExp.map(function(c){return c.nome;});
   var nuove=RES.dett.map(function(d){return "DA_SOTTRARRE · "+d.titolo;})
     .concat(["TOT_DA_SOTTRARRE",nomeVal+" NETTO","ESITO","CONTROLLO"]);
   var aoa=[intestOrig.concat(nuove)];
   RES.out.forEach(function(r){
-    var base=[];
-    for(var c=0;c<P.cols.length;c++){ var v=r.dati[c]; base.push(v===undefined?null:v); }
+    var base=colsExp.map(function(c){ var v=r.dati[c.i]; return v===undefined?null:v; });
     var n=nettoDi(r);
     aoa.push(base.concat(r.valori).concat([r.sub,n,
       r.toccata?"TOCCATA":"NESSUN FILE LA TOCCA",
       r.netto<0?(azzeraNeg()?"NEGATIVO AZZERATO ("+r.netto+")":"NEGATIVO — da verificare"):""]));
   });
   aoa.push([]);
-  var totRow=new Array(P.cols.length).fill(null);
-  totRow[0]="TOTALE"; totRow[P.val]=RES.totDisp;
+  var totRow=new Array(colsExp.length).fill(null);
+  totRow[0]="TOTALE";
+  var posVal=-1;
+  for(var pv=0;pv<colsExp.length;pv++){ if(colsExp[pv].i===P.val){ posVal=pv; break; } }
+  if(posVal>-1) totRow[posVal]=RES.totDisp;
   RES.dett.forEach(function(_,i){ totRow.push(RES.out.reduce(function(a,r){return a+r.valori[i];},0)); });
   totRow.push(RES.out.reduce(function(a,r){return a+r.sub;},0)); totRow.push(netti);
   aoa.push(totRow);
   var ws1=XLSX.utils.aoa_to_sheet(aoa);
   ws1['!cols']=intestOrig.concat(nuove).map(function(h){return {wch:Math.min(40,Math.max(12,String(h).length+2))};});
+  evidenziaModifiche(ws1,colsExp.length);
   XLSX.utils.book_append_sheet(wb,ws1,"RISULTATO");
 
   var aoa2=[["FILE","RIGHE_NEL_FILE"].concat(nomiKey).concat(["CODICI_DI_ORIGINE","DETTAGLIO","TOT_NON_SOTTRATTO"])];
@@ -1170,6 +1246,12 @@ function esporta(){
   var aoa3=[
     ["Riconciliazione posti",""],
     ["Elaborato il",d.toLocaleString('it-IT')],
+    [],
+    ["Legenda colori nel foglio RISULTATO",""],
+    ["Ambra","valore con una sottrazione effettiva su quella riga"],
+    ["Rosso","netto risultato negativo (i posti da sottrarre superano i disponibili)"],
+    [],
+    ["Colonne del primo file incluse nel foglio RISULTATO",colonneEsportate().map(function(c){return c.nome;}).join(" + ")],
     [],
     ["PRIMO FILE — posti disponibili",P.nome],
     ["Foglio",P.foglio],
