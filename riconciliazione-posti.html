@@ -348,7 +348,7 @@ button.minuto:hover:not(:disabled){background:var(--alto);color:var(--testo);bor
 
       <div class="sezione">
         <span class="etichetta">Colonne del primo file nell'Excel</span>
-        <p class="aiuto" style="margin:8px 0 12px">Le colonne calcolate (dettaglio delle sottrazioni, netto, esito) sono sempre incluse nel foglio RISULTATO. Scegli anche quali colonne originali del primo file portare con sé. Nell'Excel, le celle con una sottrazione effettiva sono evidenziate in ambra; il netto negativo in rosso.</p>
+        <p class="aiuto" style="margin:8px 0 12px">Le colonne calcolate (dettaglio delle sottrazioni, netto, esito) sono sempre incluse nel foglio RISULTATO. Scegli anche quali colonne originali del primo file portare con sé. Nell'Excel, sulle righe con una sottrazione effettiva vengono evidenziati in ambra i posti in ingresso e il netto (in rosso se il netto è negativo); l'ESITO diventa MODIFICATA o NON MODIFICATA.</p>
         <div class="elenco" id="colOut"></div>
       </div>
 
@@ -1165,7 +1165,7 @@ function disegnaTabella(){
 }
 
 /* ---------- Excel ---------- */
-function evidenziaModifiche(ws,base){
+function evidenziaModifiche(ws,base,posVal){
   if(typeof XLSX.utils.encode_cell!=="function") return;
   var stileModifica={fill:{patternType:"solid",fgColor:{rgb:"FFE3A83C"}}};
   var stileNegativo={fill:{patternType:"solid",fgColor:{rgb:"FFEC7663"}}};
@@ -1188,9 +1188,11 @@ function evidenziaModifiche(ws,base){
       if(ws[addrTot]) ws[addrTot].s=stileModifica;
     }
     var addrNetto=XLSX.utils.encode_cell({r:riga,c:iNetto});
-    if(ws[addrNetto]){
-      if(r.netto<0) ws[addrNetto].s=stileNegativo;
-      else if(r.sub!==0) ws[addrNetto].s=stileModifica;
+    var addrVal=posVal>-1?XLSX.utils.encode_cell({r:riga,c:posVal}):null;
+    var stile = r.netto<0 ? stileNegativo : (r.sub!==0 ? stileModifica : null);
+    if(stile){
+      if(ws[addrNetto]) ws[addrNetto].s=stile;
+      if(addrVal && ws[addrVal]) ws[addrVal].s=stile;
     }
   });
 }
@@ -1210,7 +1212,7 @@ function esporta(){
     var base=colsExp.map(function(c){ var v=r.dati[c.i]; return v===undefined?null:v; });
     var n=nettoDi(r);
     aoa.push(base.concat(r.valori).concat([r.sub,n,
-      r.toccata?"TOCCATA":"NESSUN FILE LA TOCCA",
+      r.toccata?"MODIFICATA":"NON MODIFICATA",
       r.netto<0?(azzeraNeg()?"NEGATIVO AZZERATO ("+r.netto+")":"NEGATIVO — da verificare"):""]));
   });
   aoa.push([]);
@@ -1224,7 +1226,7 @@ function esporta(){
   aoa.push(totRow);
   var ws1=XLSX.utils.aoa_to_sheet(aoa);
   ws1['!cols']=intestOrig.concat(nuove).map(function(h){return {wch:Math.min(40,Math.max(12,String(h).length+2))};});
-  evidenziaModifiche(ws1,colsExp.length);
+  evidenziaModifiche(ws1,colsExp.length,posVal);
   XLSX.utils.book_append_sheet(wb,ws1,"RISULTATO");
 
   var aoa2=[["FILE","RIGHE_NEL_FILE"].concat(nomiKey).concat(["CODICI_DI_ORIGINE","DETTAGLIO","TOT_NON_SOTTRATTO"])];
@@ -1248,8 +1250,8 @@ function esporta(){
     ["Elaborato il",d.toLocaleString('it-IT')],
     [],
     ["Legenda colori nel foglio RISULTATO",""],
-    ["Ambra","valore con una sottrazione effettiva su quella riga"],
-    ["Rosso","netto risultato negativo (i posti da sottrarre superano i disponibili)"],
+    ["Ambra","riga con una sottrazione effettiva: colora il dettaglio, il totale sottratto, i posti in ingresso e il netto"],
+    ["Rosso","netto risultato negativo (i posti da sottrarre superano i disponibili): colora i posti in ingresso e il netto"],
     [],
     ["Colonne del primo file incluse nel foglio RISULTATO",colonneEsportate().map(function(c){return c.nome;}).join(" + ")],
     [],
