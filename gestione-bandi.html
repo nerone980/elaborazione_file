@@ -133,7 +133,7 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
   <header class="testata">
     <p class="occhiello">Strumento locale · i file restano sul tuo computer</p>
     <h1>Gestione Bandi</h1>
-    <p class="intro">Due generatori di script SQL di inserimento: un bando in <code>MOBINT.BANDI</code> a partire dai valori inseriti a mano, e le sedi in uscita di un bando in <code>MOBINT.BANDO_OrdinarioCT_SEDI_USCITA</code> a partire da un Excel.</p>
+    <p class="intro">Tre generatori di script SQL di inserimento: un bando in <code>MOBINT.BANDI</code> a partire dai valori inseriti a mano, le sedi in uscita di un bando in <code>MOBINT.BANDO_OrdinarioCT_SEDI_USCITA</code> e gli utenti di un bando in <code>MOBINT.BANDO_OrdinarioCT_UTENTI</code>, questi ultimi due a partire da un Excel.</p>
   </header>
 
   <div id="allarmeLib" class="avviso chiuso">
@@ -209,7 +209,7 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
   <!-- ============ PARTE 2 — SEDI USCITA ============ -->
   <section class="carta">
     <h2>Sedi in uscita — MOBINT.BANDO_OrdinarioCT_SEDI_USCITA</h2>
-    <p class="aiuto">Carica l'Excel con le sedi, scegli le colonne per CODICE_SEDE e N_MAX_USCITA, indica l'ID_BANDO e l'ID di partenza. L'<code>ID</code> di riga viene assegnato in sequenza, a incrementi di 1 a partire da quel valore. Le righe con N_MAX_USCITA a 0 vengono escluse dallo script.</p>
+    <p class="aiuto">Carica l'Excel con le sedi, scegli le colonne per CODICE_SEDE e N_MAX_USCITA e indica l'ID_BANDO. L'<code>ID</code> non si inserisce: viene calcolato dallo script con <code>(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.BANDO_OrdinarioCT_SEDI_USCITA)</code>, come per i bandi. Le righe con N_MAX_USCITA a 0 vengono escluse dallo script.</p>
 
     <div class="deposito" id="depSedi" tabindex="0" role="button" aria-label="Carica il file delle sedi in uscita">
       <strong>Trascina qui il file, o clicca per sceglierlo</strong>
@@ -230,7 +230,6 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
         <div class="campo"><label for="colSede">Colonna CODICE_SEDE</label><select id="colSede"></select></div>
         <div class="campo"><label for="colUscita">Colonna N_MAX_USCITA</label><select id="colUscita"></select></div>
         <div class="campo"><label for="sediBando">ID_BANDO</label><input type="number" id="sediBando" min="0" step="1"></div>
-        <div class="campo"><label for="sediIdIniziale">ID iniziale</label><input type="number" id="sediIdIniziale" min="1" step="1" value="1"></div>
       </div>
 
       <div class="azioni" style="margin-top:0">
@@ -238,6 +237,44 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
       </div>
       <pre class="sqlprev" id="sediPrev" style="margin-top:16px"></pre>
       <p class="nota" id="sediConta"></p>
+    </div>
+  </section>
+
+  <!-- ============ PARTE 3 — UTENTI ============ -->
+  <section class="carta">
+    <h2>Utenti — MOBINT.BANDO_OrdinarioCT_UTENTI</h2>
+    <p class="aiuto">Carica l'Excel con gli utenti, scegli le colonne per MATRICOLA e CODICE_SEDE_USCITA e indica l'ID_BANDO. L'<code>ID</code> non si inserisce: viene calcolato dallo script con <code>(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.BANDO_OrdinarioCT_UTENTI)</code>, come per i bandi e per le sedi. CHECKCOPERTURA vale 0 o 1 per l'intero script: di default è 0 per tutte le righe.</p>
+
+    <div class="deposito" id="depUtenti" tabindex="0" role="button" aria-label="Carica il file degli utenti">
+      <strong>Trascina qui il file, o clicca per sceglierlo</strong>
+      <span>.xlsx · .xlsm · .xls</span>
+    </div>
+    <input type="file" id="inpUtenti" accept=".xlsx,.xlsm,.xls" class="chiuso">
+
+    <div id="confUtenti" class="chiuso" style="margin-top:20px">
+      <div class="campi">
+        <div class="campo"><label for="foglioUtenti">Foglio</label><select id="foglioUtenti"></select></div>
+        <div class="campo"><label for="hdrUtenti">Riga dei titoli</label><input type="number" id="hdrUtenti" min="1" value="1"></div>
+        <div class="campo"><label for="datUtenti">Prima riga di dati</label><input type="number" id="datUtenti" min="2" value="2"></div>
+      </div>
+      <div class="griglia" id="prevUtenti"></div>
+      <p class="nota" style="margin-bottom:18px">Clicca il numero di una riga per usarla come riga dei titoli.</p>
+
+      <div class="campi">
+        <div class="campo"><label for="colMatricola">Colonna MATRICOLA</label><select id="colMatricola"></select></div>
+        <div class="campo"><label for="colSedeUscita">Colonna CODICE_SEDE_USCITA</label><select id="colSedeUscita"></select></div>
+        <div class="campo"><label for="utentiBando">ID_BANDO</label><input type="number" id="utentiBando" min="0" step="1"></div>
+      </div>
+
+      <div class="opzioni">
+        <label><input type="checkbox" id="utentiCheckCopertura"><span>CHECKCOPERTURA a 1 per tutte le righe<small>Di default non è spuntato: CHECKCOPERTURA viene inserito a 0 per ogni riga dello script.</small></span></label>
+      </div>
+
+      <div class="azioni" style="margin-top:0">
+        <button type="button" id="btnScaricaUtenti">Scarica lo script INSERT_UTENTI</button>
+      </div>
+      <pre class="sqlprev" id="utentiPrev" style="margin-top:16px"></pre>
+      <p class="nota" id="utentiConta"></p>
     </div>
   </section>
 </div>
@@ -514,15 +551,14 @@ function righeSedi(){
   }
   return {righe:out,saltate:saltate,azzerate:azzerate};
 }
-function insertSede(riga,id,idBando){
+function insertSede(riga,idBando){
   return "INSERT INTO MOBINT.BANDO_OrdinarioCT_SEDI_USCITA (ID, CODICE_SEDE, N_MAX_USCITA, ID_BANDO) VALUES ("+
-    id+", "+apice(riga.sede)+", "+riga.uscita+", "+idBando+");";
+    "(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.BANDO_OrdinarioCT_SEDI_USCITA), "+apice(riga.sede)+", "+riga.uscita+", "+idBando+");";
 }
 function scriptSedi(){
   var idBando=$('sediBando').value.trim();
-  var idIniz=Number($('sediIdIniziale').value)||1;
   var dati=righeSedi();
-  var righeSql=dati.righe.map(function(r,i){ return insertSede(r,idIniz+i,idBando); });
+  var righeSql=dati.righe.map(function(r){ return insertSede(r,idBando); });
   return {righe:righeSql,saltate:dati.saltate,azzerate:dati.azzerate,tot:dati.righe.length};
 }
 function anteprimaSedi(){
@@ -551,7 +587,6 @@ $('datSedi').onchange=function(){ var v=Math.max(2,Number(this.value)||2); S.dat
 $('colSede').onchange=anteprimaSedi;
 $('colUscita').onchange=anteprimaSedi;
 $('sediBando').oninput=anteprimaSedi;
-$('sediIdIniziale').oninput=anteprimaSedi;
 $('btnScaricaSedi').onclick=function(){
   if(!S.cols.length){ alert("Carica prima il file delle sedi."); return; }
   if(!$('sediBando').value.trim()){ alert("Indica l'ID_BANDO."); return; }
@@ -567,6 +602,117 @@ depSedi.ondragover=function(e){e.preventDefault();depSedi.classList.add('sopra')
 depSedi.ondragleave=function(){depSedi.classList.remove('sopra');};
 depSedi.ondrop=function(e){e.preventDefault();depSedi.classList.remove('sopra');if(e.dataTransfer.files[0]) leggiSedi(e.dataTransfer.files[0]);};
 inpSedi.onchange=function(){ if(inpSedi.files[0]) leggiSedi(inpSedi.files[0]); };
+
+/* ================= PARTE 3 — UTENTI ================= */
+var U={wb:null,nome:null,foglio:null,righe:[],hdr:1,dat:2,cols:[]};
+
+function leggiUtenti(file){
+  if(typeof XLSX==="undefined"){ $('allarmeLib').classList.remove('chiuso'); return; }
+  var fr=new FileReader();
+  fr.onload=function(e){
+    var wb;
+    try{ wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"}); }
+    catch(err){ alert("Non riesco a leggere il file: "+err.message); return; }
+    if(!wb.SheetNames.length){ alert("Il file non contiene fogli."); return; }
+    U.wb=wb; U.nome=file.name;
+    var sel=$('foglioUtenti'); sel.innerHTML="";
+    wb.SheetNames.forEach(function(s){var o=document.createElement("option");o.value=s;o.textContent=s;sel.appendChild(o);});
+    $('confUtenti').classList.remove('chiuso');
+    caricaFoglioUtenti(wb.SheetNames[0]);
+  };
+  fr.readAsArrayBuffer(file);
+}
+function caricaFoglioUtenti(f){
+  U.foglio=f; U.righe=leggiRighe(U.wb,f);
+  U.hdr=titoliProbabili(U.righe); U.dat=U.hdr+1;
+  $('hdrUtenti').value=U.hdr; $('datUtenti').value=U.dat;
+  aggiornaUtenti();
+}
+function aggiornaUtenti(){
+  U.cols=colonneDa(U.righe,U.hdr,U.dat);
+  grigliaIn($('prevUtenti'),U.righe,U.hdr,U.dat,U.cols,function(r){
+    U.hdr=r; U.dat=r+1; $('hdrUtenti').value=r; $('datUtenti').value=r+1; aggiornaUtenti();
+  });
+  disegnaColonneUtenti();
+  anteprimaUtenti();
+}
+function disegnaColonneUtenti(){
+  [['colMatricola',0],['colSedeUscita',1]].forEach(function(pair){
+    var sel=$(pair[0]);
+    var prec=sel.value;
+    sel.innerHTML="";
+    U.cols.forEach(function(c){
+      var o=document.createElement("option"); o.value=c.i; o.textContent=c.lettera+" · "+c.nome; sel.appendChild(o);
+    });
+    if(prec!=="" && U.cols.some(function(c){return String(c.i)===prec;})) sel.value=prec;
+    else if(U.cols[pair[1]]) sel.value=String(U.cols[pair[1]].i);
+  });
+}
+function righeUtenti(){
+  var cMatr=Number($('colMatricola').value), cSede=Number($('colSedeUscita').value);
+  var out=[], saltate=0;
+  for(var r=U.dat-1;r<U.righe.length;r++){
+    var riga=U.righe[r]||[];
+    if(riga.every(function(c){return c===null||c===undefined||String(c).trim()==="";})) continue;
+    var matricola=testoCella(riga[cMatr]);
+    var sedeUscita=testoCella(riga[cSede]);
+    if(matricola===""||sedeUscita===""){ saltate++; continue; }
+    out.push({matricola:matricola,sedeUscita:sedeUscita});
+  }
+  return {righe:out,saltate:saltate};
+}
+function insertUtente(riga,idBando,checkCopertura){
+  return "INSERT INTO MOBINT.BANDO_OrdinarioCT_UTENTI (ID, MATRICOLA, CODICE_SEDE_USCITA, ID_BANDO, CHECKCOPERTURA) VALUES ("+
+    "(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.BANDO_OrdinarioCT_UTENTI), "+apice(riga.matricola)+", "+apice(riga.sedeUscita)+", "+idBando+", "+checkCopertura+");";
+}
+function scriptUtenti(){
+  var idBando=$('utentiBando').value.trim();
+  var checkCopertura=$('utentiCheckCopertura').checked?1:0;
+  var dati=righeUtenti();
+  var righeSql=dati.righe.map(function(r){ return insertUtente(r,idBando,checkCopertura); });
+  return {righe:righeSql,saltate:dati.saltate,tot:dati.righe.length};
+}
+function anteprimaUtenti(){
+  var pre=$('utentiPrev');
+  var idBando=$('utentiBando').value.trim();
+  if(!U.cols.length || !idBando){
+    pre.innerHTML='<span class="off">'+(!U.cols.length?"Carica il file per vedere l'anteprima.":"Indica l'ID_BANDO per vedere l'anteprima.")+'</span>';
+    $('utentiConta').textContent="";
+    return;
+  }
+  var o=scriptUtenti();
+  if(!o.righe.length){ pre.innerHTML='<span class="off">Nessuna riga con MATRICOLA e CODICE_SEDE_USCITA validi.</span>'; }
+  else pre.textContent=o.righe[0];
+  var note=[o.tot+" INSERT nello script (più la COMMIT finale)"];
+  if(o.saltate) note.push(o.saltate+" righe saltate: manca la matricola o il codice sede uscita");
+  $('utentiConta').textContent=note.join(" · ")+".";
+}
+$('foglioUtenti').onchange=function(){ caricaFoglioUtenti(this.value); };
+$('hdrUtenti').onchange=function(){
+  var v=Math.max(1,Number(this.value)||1); U.hdr=v; this.value=v;
+  if(U.dat<=v){ U.dat=v+1; $('datUtenti').value=v+1; }
+  aggiornaUtenti();
+};
+$('datUtenti').onchange=function(){ var v=Math.max(2,Number(this.value)||2); U.dat=v; this.value=v; aggiornaUtenti(); };
+$('colMatricola').onchange=anteprimaUtenti;
+$('colSedeUscita').onchange=anteprimaUtenti;
+$('utentiBando').oninput=anteprimaUtenti;
+$('utentiCheckCopertura').onchange=anteprimaUtenti;
+$('btnScaricaUtenti').onclick=function(){
+  if(!U.cols.length){ alert("Carica prima il file degli utenti."); return; }
+  if(!$('utentiBando').value.trim()){ alert("Indica l'ID_BANDO."); return; }
+  var o=scriptUtenti();
+  if(!o.righe.length){ alert("Con i criteri attuali non c'è nessuna riga da inserire."); return; }
+  scarica(o.righe.join("\n")+"\nCOMMIT;\n",nomeFile("insert_utenti","sql"));
+};
+
+var depUtenti=$('depUtenti'), inpUtenti=$('inpUtenti');
+depUtenti.onclick=function(){inpUtenti.click();};
+depUtenti.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();inpUtenti.click();}};
+depUtenti.ondragover=function(e){e.preventDefault();depUtenti.classList.add('sopra');};
+depUtenti.ondragleave=function(){depUtenti.classList.remove('sopra');};
+depUtenti.ondrop=function(e){e.preventDefault();depUtenti.classList.remove('sopra');if(e.dataTransfer.files[0]) leggiUtenti(e.dataTransfer.files[0]);};
+inpUtenti.onchange=function(){ if(inpUtenti.files[0]) leggiUtenti(inpUtenti.files[0]); };
 
 })();
 </script>
