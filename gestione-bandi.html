@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestione Bandi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fondo:#111920;
+  --pannello:#18232B;
+  --alto:#1F2E38;
+  --bordo:#2A3B47;
+  --bordo-forte:#3D5462;
+  --testo:#E3EBF0;
+  --tenue:#8CA3B2;
+  --fioco:#5F7484;
+  --ottone:#E3A83C;
+  --ottone-scuro:#8A6520;
+  --sans:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --cond:"IBM Plex Sans Condensed","IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--fondo);color:var(--testo);
+  font-family:var(--sans);font-size:15.5px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 26px}
+::selection{background:var(--ottone);color:#12191F}
+
+.torna{
+  display:inline-flex;align-items:center;gap:6px;margin:26px 0 0;
+  font-family:var(--cond);font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--fioco);text-decoration:none;font-weight:600;
+}
+.torna:hover,.torna:focus-visible{color:var(--ottone)}
+
+.testata{padding:22px 0 34px}
+.occhiello{font-family:var(--cond);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ottone);font-weight:600;margin:0 0 10px}
+h1{font-family:var(--cond);font-weight:700;font-size:40px;line-height:1.05;margin:0 0 12px;letter-spacing:-.015em}
+.intro{margin:0;max-width:62ch;color:var(--tenue);font-size:15px}
+
+.carta{
+  background:var(--pannello);border:1px dashed var(--bordo-forte);border-radius:3px;
+  padding:40px 26px;text-align:center;margin-bottom:60px;
+}
+.carta strong{display:block;font-family:var(--cond);font-size:18px;font-weight:600;margin-bottom:6px}
+.carta span{font-size:13.5px;color:var(--tenue)}
+
+@media(max-width:560px){
+  h1{font-size:31px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <a class="torna" href="index.html">← Utility Mobilità</a>
+  <header class="testata">
+    <p class="occhiello">Strumenti locali · i file restano sul tuo computer</p>
+    <h1>Gestione Bandi</h1>
+    <p class="intro">Questa pagina è in costruzione.</p>
+  </header>
+
+  <div class="carta">
+    <strong>Ancora nessuna funzionalità</strong>
+    <span>Lo strumento verrà definito e sviluppato qui.</span>
+  </div>
+</div>
+
+</body>
+</html>
