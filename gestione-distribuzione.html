@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Riconciliazione posti</title>
+<title>Gestione Distribuzione</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -238,8 +238,8 @@ button.minuto:hover:not(:disabled){background:var(--alto);color:var(--testo);bor
   <a class="torna" href="index.html">← Utility Mobilità</a>
   <header class="testata">
     <p class="occhiello">Strumento locale · i file restano sul tuo computer</p>
-    <h1>Riconciliazione posti</h1>
-    <p class="intro">Carica il file dei posti disponibili, poi uno o più file dei posti già assegnati. Indichi le colonne che fanno da chiave e quelle da sommare, e ottieni il netto: in Excel e, se serve, come script SQL di inserimento.</p>
+    <h1>Gestione Distribuzione</h1>
+    <p class="intro">Carica il file dei posti disponibili e indica le colonne che fanno da chiave e quella del totale: ottieni subito il netto in Excel e, se serve, come script SQL di inserimento. Se vuoi sottrarre dei posti già assegnati, aggiungi anche uno o più file: sono facoltativi, senza di essi il netto coincide con i disponibili.</p>
   </header>
 
   <div id="allarmeLib" class="avviso chiuso">
@@ -299,7 +299,7 @@ button.minuto:hover:not(:disabled){background:var(--alto);color:var(--testo);bor
   <div id="fonti"></div>
 
   <div class="piu">
-    <p>I posti di tutti i file si sommano prima di essere sottratti.</p>
+    <p>Facoltativo: senza nessun file da sottrarre il netto coincide con i disponibili. I posti di tutti i file caricati si sommano prima di essere sottratti.</p>
     <button type="button" class="calmo" id="piuFonte">Aggiungi un file da sottrarre</button>
   </div>
 
@@ -975,7 +975,7 @@ function verificaPronto(){
   riassuntoPrimo();
   FONTI.forEach(riassuntoFonte);
   var caricate=FONTI.filter(function(f){return f.wb;});
-  var ok = P.wb && P.keys.length>0 && P.val!==null && caricate.length>0 && caricate.every(fontePronta);
+  var ok = P.wb && P.keys.length>0 && P.val!==null && caricate.every(fontePronta);
   $('btnCalcola').disabled=!ok;
   var manca=[];
   if(!P.wb) manca.push("carica il file dei posti disponibili");
@@ -983,14 +983,15 @@ function verificaPronto(){
     if(!P.keys.length) manca.push("scegli le colonne chiave");
     if(P.val===null) manca.push("scegli la colonna del totale");
   }
-  if(P.wb && !caricate.length) manca.push("carica almeno un file da sottrarre");
   caricate.forEach(function(f){
     var eti=FONTI.length>1?("file "+(FONTI.indexOf(f)+1)):"secondo file";
     if(P.keys.length && !P.keys.every(function(k){return f.map[k]!==undefined;})) manca.push("abbina le chiavi nel "+eti);
     if(!f.sum.length) manca.push("scegli le colonne da sommare nel "+eti);
   });
   $('statoCalcolo').innerHTML = ok
-    ? "Tutto pronto: "+caricate.length+" fil"+(caricate.length===1?"e":"i")+" da sottrarre."
+    ? (caricate.length
+        ? "Tutto pronto: "+caricate.length+" fil"+(caricate.length===1?"e":"i")+" da sottrarre."
+        : "Tutto pronto: nessun file da sottrarre caricato, il netto coinciderà con i disponibili.")
     : '<span class="manca">Da fare: '+manca.join(" · ")+'.</span>';
   rotaia();
 }
@@ -1118,6 +1119,7 @@ function mostraRisultato(){
 
   var m=$('messaggi'); m.innerHTML="";
   function msg(html,cls){ var d=document.createElement("div"); d.className="avviso"+(cls?" "+cls:""); d.innerHTML=html; m.appendChild(d); }
+  if(!RES.attive.length) msg("Nessun file da sottrarre caricato: il netto coincide con i posti disponibili.","ambra");
   if(RES.attive.length>1){
     var righe=RES.attive.map(function(x){
       var suo=RES.out.reduce(function(a,r){
