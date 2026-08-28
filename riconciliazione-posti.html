@@ -39,6 +39,10 @@ body{
 ::selection{background:var(--ottone);color:#12191F}
 
 /* ---------- testata ---------- */
+.torna{display:inline-flex;align-items:center;gap:6px;margin:20px 0 0;
+  font-family:var(--cond);font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--fioco);text-decoration:none;font-weight:600}
+.torna:hover,.torna:focus-visible{color:var(--ottone)}
 .testata{padding:44px 0 26px}
 .occhiello{font-family:var(--cond);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ottone);font-weight:600;margin:0 0 10px}
 h1{font-family:var(--cond);font-weight:700;font-size:40px;line-height:1.05;margin:0 0 12px;letter-spacing:-.015em}
@@ -231,6 +235,7 @@ button.minuto:hover:not(:disabled){background:var(--alto);color:var(--testo);bor
 <nav class="rotaia" aria-label="Avanzamento"><div class="wrap" id="rotaia"></div></nav>
 
 <div class="wrap">
+  <a class="torna" href="index.html">← Utility Mobilità</a>
   <header class="testata">
     <p class="occhiello">Strumento locale · i file restano sul tuo computer</p>
     <h1>Riconciliazione posti</h1>
