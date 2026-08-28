@@ -61,6 +61,8 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--tenue) 50%),
   background-position:calc(100% - 16px) calc(50% + 1px),calc(100% - 11px) calc(50% + 1px);
   background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px;min-width:180px}
 input[type=number]{width:120px}
+.campo-tipo{flex:1 1 420px}
+.campo-tipo select{width:100%;min-width:0}
 input[type=text]{min-width:260px}
 input[type=datetime-local]{min-width:210px}
 select:focus-visible,input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--ottone);outline-offset:1px}
@@ -145,15 +147,29 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
 
     <div class="campi">
       <div class="campo"><label for="bAnno">Anno inserimento</label><input type="number" id="bAnno" min="2000" max="2100" step="1"></div>
-      <div class="campo"><label for="bTipo">Tipo bando</label>
+      <div class="campo campo-tipo"><label for="bTipo">Tipo bando</label>
         <select id="bTipo">
-          <option value="1">1 · L104/92</option>
-          <option value="2">2 · Ordinaria</option>
-          <option value="3">3 · CT</option>
-          <option value="4">4 · PNRR</option>
+          <option value="1">1 · Mobilità volontaria interna per beneficiari di L104</option>
+          <option value="2">2 · Mobilità volontaria interna ordinaria</option>
+          <option value="3">3 · Mobilità volontaria interna 104 Commissioni Territoriali</option>
+          <option value="4">4 · Mobilità volontaria interna 104 Pnrr</option>
+          <option value="5">5 · Mobilità volontaria interna Ordinaria Commissioni Territoriali</option>
+          <option value="6">6 · Mobilità volontaria interna Ordinaria Pnrr</option>
         </select>
       </div>
-      <div class="campo"><label for="bStato">ID stato bando</label><input type="number" id="bStato" min="0" step="1" value="6"></div>
+      <div class="campo"><label for="bStato">Stato bando</label>
+        <select id="bStato">
+          <option value="1">1 · Aperto</option>
+          <option value="2">2 · ValutazioneDomande</option>
+          <option value="3">3 · ApertoPerAggiornamento</option>
+          <option value="4">4 · ElaborazioneGraduatorie</option>
+          <option value="5">5 · Concluso</option>
+          <option value="6" selected>6 · Chiuso</option>
+          <option value="7">7 · PubblicazioneEsiti</option>
+          <option value="8">8 · AperturaStraordinaria</option>
+          <option value="9">9 · PubblicazioneGraduatoria</option>
+        </select>
+      </div>
       <div class="campo largo"><label for="bDescr">Descrizione</label><input type="text" id="bDescr" placeholder="es. Bando L104/92 - 2025"></div>
     </div>
 
@@ -309,7 +325,20 @@ function validaBando(b){
   return manca;
 }
 function etichettaTipo(v){
-  return {1:"L104/92",2:"Ordinaria",3:"CT",4:"PNRR"}[Number(v)]||v;
+  return {
+    1:"Mobilità volontaria interna per beneficiari di L104",
+    2:"Mobilità volontaria interna ordinaria",
+    3:"Mobilità volontaria interna 104 Commissioni Territoriali",
+    4:"Mobilità volontaria interna 104 Pnrr",
+    5:"Mobilità volontaria interna Ordinaria Commissioni Territoriali",
+    6:"Mobilità volontaria interna Ordinaria Pnrr"
+  }[Number(v)]||v;
+}
+function etichettaStato(v){
+  return {
+    1:"Aperto",2:"ValutazioneDomande",3:"ApertoPerAggiornamento",4:"ElaborazioneGraduatorie",
+    5:"Concluso",6:"Chiuso",7:"PubblicazioneEsiti",8:"AperturaStraordinaria",9:"PubblicazioneGraduatoria"
+  }[Number(v)]||v;
 }
 function disegnaCodaBandi(){
   var box=$('bandiCoda');
@@ -318,7 +347,7 @@ function disegnaCodaBandi(){
   BANDI.forEach(function(b,i){
     var riga=document.createElement("div"); riga.className="voce-coda";
     var d=document.createElement("span"); d.className="desc";
-    d.innerHTML="<b>"+b.anno+" · "+etichettaTipo(b.tipo)+"</b> — "+(b.descr||"").replace(/</g,"&lt;");
+    d.innerHTML="<b>"+b.anno+" · "+etichettaTipo(b.tipo)+" · "+etichettaStato(b.stato)+"</b> — "+(b.descr||"").replace(/</g,"&lt;");
     var btn=document.createElement("button"); btn.type="button"; btn.className="minuto";
     btn.textContent="Togli";
     btn.onclick=function(){ BANDI.splice(i,1); disegnaCodaBandi(); aggiornaScriptBandi(); };
@@ -334,7 +363,7 @@ function insertBando(b){
     ")\n"+
     "VALUES (\n"+
     "    "+apice(b.anno)+",  --ANNO_INSERIMENTO\n"+
-    "    "+apice(b.tipo)+",  --TIPO BANDO  4 Pnrr - 3ct - 1 L104 - 2 ordinaria\n"+
+    "    "+apice(b.tipo)+",  --ID_TIPO_BANDO "+b.tipo+" = "+etichettaTipo(b.tipo)+"\n"+
     "    "+sqlData(b.iniAcc)+", --DATA_INIZIO_ACCETTAZIONE\n"+
     "    "+sqlData(b.fineAcc)+", --DATA_FINE_ACCETTAZIONE\n"+
     "    "+sqlData(b.apertura)+",  --DATA_APERTURA\n"+
@@ -343,7 +372,7 @@ function insertBando(b){
     "    "+(b.haRettifica?sqlData(b.iniRett):"NULL")+",  --DATA_INIZIO_RETTIFICA\n"+
     "    "+(b.haRettifica?sqlData(b.fineRett):"NULL")+",  --DATA_FINE_RETTIFICA\n"+
     "    (SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.BANDI),  -- ID DEL BANDO CALCOLATO DINAMICAMENTE\n"+
-    "    "+apice(b.stato)+"  --ID_STATO_BANDO\n"+
+    "    "+apice(b.stato)+"  --ID_STATO_BANDO "+b.stato+" = "+etichettaStato(b.stato)+"\n"+
     ");";
 }
 function scriptBandi(){
