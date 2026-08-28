@@ -197,7 +197,16 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
       <div class="campo"><label for="bFineRett">Data fine rettifica</label><input type="datetime-local" id="bFineRett"></div>
     </div>
 
-    <div class="azioni" style="margin-top:0">
+    <div class="sezione">
+      <span class="etichetta">Regolamento collegato — MOBINT.BANDI_REGOLAMENTI</span>
+      <p class="aiuto" style="margin:8px 0 14px">Per ogni bando in coda viene generata anche la INSERT del regolamento collegato, con lo stesso <code>ID</code> calcolato dinamicamente su MOBINT.BANDI_REGOLAMENTI.</p>
+      <div class="campi">
+        <div class="campo"><label for="bIdBandoReg">ID_BANDO</label><input type="number" id="bIdBandoReg" min="0" step="1"></div>
+        <div class="campo campo-tipo"><label for="bNomeReg">Nome file</label><input type="text" id="bNomeReg" value="Mobilità.pdf"></div>
+      </div>
+    </div>
+
+    <div class="azioni" style="margin-top:16px">
       <button type="button" id="btnAggiungiBando">Aggiungi alla lista</button>
     </div>
     <p class="nota manca" id="bandoErrore" style="display:none"></p>
@@ -384,7 +393,9 @@ function leggiFormBando(){
     chiusura:$('bChiusura').value,
     haRettifica:$('bHaRettifica').checked,
     iniRett:$('bIniRett').value,
-    fineRett:$('bFineRett').value
+    fineRett:$('bFineRett').value,
+    idBandoReg:$('bIdBandoReg').value.trim(),
+    nomeReg:$('bNomeReg').value.trim()
   };
 }
 function validaBando(b){
@@ -400,6 +411,8 @@ function validaBando(b){
     if(!b.iniRett) manca.push("data inizio rettifica");
     if(!b.fineRett) manca.push("data fine rettifica");
   }
+  if(!b.idBandoReg) manca.push("ID_BANDO del regolamento");
+  if(!b.nomeReg) manca.push("nome del file di regolamento");
   return manca;
 }
 function etichettaTipo(v){
@@ -425,7 +438,7 @@ function disegnaCodaBandi(){
   BANDI.forEach(function(b,i){
     var riga=document.createElement("div"); riga.className="voce-coda";
     var d=document.createElement("span"); d.className="desc";
-    d.innerHTML="<b>"+b.anno+" · "+etichettaTipo(b.tipo)+" · "+etichettaStato(b.stato)+"</b> — "+(b.descr||"").replace(/</g,"&lt;");
+    d.innerHTML="<b>"+b.anno+" · "+etichettaTipo(b.tipo)+" · "+etichettaStato(b.stato)+"</b> — "+(b.descr||"").replace(/</g,"&lt;")+" — regolamento: ID_BANDO "+b.idBandoReg+", "+(b.nomeReg||"").replace(/</g,"&lt;");
     var btn=document.createElement("button"); btn.type="button"; btn.className="minuto";
     btn.textContent="Togli";
     btn.onclick=function(){ BANDI.splice(i,1); disegnaCodaBandi(); aggiornaScriptBandi(); };
@@ -453,14 +466,20 @@ function insertBando(b){
     "    "+apice(b.stato)+"  --ID_STATO_BANDO "+b.stato+" = "+etichettaStato(b.stato)+"\n"+
     ");";
 }
+function insertRegolamento(b){
+  return "INSERT INTO MOBINT.BANDI_REGOLAMENTI (ID, ID_BANDO, NOME) VALUES ("+
+    "(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.BANDI_REGOLAMENTI), "+apice(b.idBandoReg)+", "+apice(b.nomeReg)+");";
+}
 function scriptBandi(){
-  return BANDI.map(insertBando).join("\n\n")+"\nCOMMIT;\n";
+  var righe=[];
+  BANDI.forEach(function(b){ righe.push(insertBando(b)); righe.push(insertRegolamento(b)); });
+  return righe.join("\n\n")+"\nCOMMIT;\n";
 }
 function aggiornaScriptBandi(){
   var pre=$('bandiPrev');
   if(!BANDI.length){ pre.innerHTML='<span class="off">Aggiungi almeno un bando alla lista.</span>'; $('bandiConta').textContent=""; return; }
-  pre.textContent=insertBando(BANDI[0]);
-  $('bandiConta').textContent=BANDI.length+" INSERT nello script"+(BANDI.length>1?" (più la COMMIT finale)":"")+".";
+  pre.textContent=insertBando(BANDI[0])+"\n\n"+insertRegolamento(BANDI[0]);
+  $('bandiConta').textContent=BANDI.length+" bandi + "+BANDI.length+" regolamenti nello script"+(BANDI.length>1?" (più la COMMIT finale)":"")+".";
 }
 $('bHaRettifica').onchange=function(){ $('bRettificaCampi').style.display=this.checked?"flex":"none"; };
 $('btnAggiungiBando').onclick=function(){

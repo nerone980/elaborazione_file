@@ -60,6 +60,8 @@ Form con anno, tipo bando, stato bando, descrizione, date (accettazione, apertur
 
 **Stato bando** (`ID_STATO_BANDO`): 1 Aperto, 2 ValutazioneDomande, 3 ApertoPerAggiornamento, 4 ElaborazioneGraduatorie, 5 Concluso, 6 Chiuso (default), 7 PubblicazioneEsiti, 8 AperturaStraordinaria, 9 PubblicazioneGraduatoria.
 
+Per ogni bando in coda il form chiede anche **ID_BANDO** e **nome del file** (di default `Mobilità.pdf`) del regolamento collegato: lo script genera, subito dopo ciascuna `INSERT` su `MOBINT.BANDI`, la relativa `INSERT INTO MOBINT.BANDI_REGOLAMENTI (ID, ID_BANDO, NOME)`, con lo stesso schema di `ID` a subquery (`NVL(MAX(ID), 0) + 1`) calcolato su `MOBINT.BANDI_REGOLAMENTI`.
+
 ### 2. Sedi in uscita — `MOBINT.BANDO_*_SEDI_USCITA`
 
 Si carica un Excel, si sceglie la **tabella di destinazione**, le colonne per `CODICE_SEDE` e `N_MAX_USCITA` e si indica l'`ID_BANDO` (parametrico). Come per i bandi, l'`ID` è sempre `(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.<tabella>)`. Le righe senza `CODICE_SEDE` sono saltate; quelle con `N_MAX_USCITA` a 0 sono escluse dallo script (entrambe contate a parte nell'anteprima).
