@@ -110,6 +110,15 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
 .griglia td.nr .tag{font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-right:7px;color:var(--ottone)}
 .griglia tr.pre td.nr .tag{color:var(--fioco)}
 .nota{font-size:12.5px;color:var(--fioco);margin:8px 0 0}
+
+.tabellaUtenti{overflow:auto;border:1px solid var(--bordo);background:var(--campo);border-radius:2px;max-height:320px}
+.tabellaUtenti table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:100%}
+.tabellaUtenti th{position:sticky;top:0;background:var(--alto);color:var(--testo);text-align:left;
+  font-weight:600;padding:8px 11px;white-space:nowrap;border-bottom:1px solid var(--bordo-forte);font-size:12px}
+.tabellaUtenti td{padding:7px 11px;white-space:nowrap;border-bottom:1px solid #17222A;color:var(--tenue)}
+.tabellaUtenti td.chk{text-align:center}
+.tabellaUtenti input[type=checkbox]{accent-color:var(--ottone);width:15px;height:15px;margin:0}
+.tabellaUtenti tbody tr:hover td{background:var(--alto);color:var(--testo)}
 .manca{color:var(--rosso)}
 
 .sqlprev{font-family:var(--mono);font-size:12px;line-height:1.6;background:var(--campo);color:var(--tenue);
@@ -243,7 +252,7 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
   <!-- ============ PARTE 3 — UTENTI ============ -->
   <section class="carta">
     <h2>Utenti — MOBINT.BANDO_OrdinarioCT_UTENTI</h2>
-    <p class="aiuto">Carica l'Excel con gli utenti, scegli le colonne per MATRICOLA e CODICE_SEDE_USCITA e indica l'ID_BANDO. L'<code>ID</code> non si inserisce: viene calcolato dallo script con <code>(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.BANDO_OrdinarioCT_UTENTI)</code>, come per i bandi e per le sedi. CHECKCOPERTURA vale 0 o 1 per l'intero script: di default è 0 per tutte le righe.</p>
+    <p class="aiuto">Carica l'Excel con gli utenti, scegli le colonne per MATRICOLA e CODICE_SEDE_USCITA e indica l'ID_BANDO. L'<code>ID</code> non si inserisce: viene calcolato dallo script con <code>(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.BANDO_OrdinarioCT_UTENTI)</code>, come per i bandi e per le sedi. CHECKCOPERTURA è modificabile riga per riga nell'elenco qui sotto: di default è 0 per ognuna.</p>
 
     <div class="deposito" id="depUtenti" tabindex="0" role="button" aria-label="Carica il file degli utenti">
       <strong>Trascina qui il file, o clicca per sceglierlo</strong>
@@ -266,11 +275,16 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
         <div class="campo"><label for="utentiBando">ID_BANDO</label><input type="number" id="utentiBando" min="0" step="1"></div>
       </div>
 
-      <div class="opzioni">
-        <label><input type="checkbox" id="utentiCheckCopertura"><span>CHECKCOPERTURA a 1 per tutte le righe<small>Di default non è spuntato: CHECKCOPERTURA viene inserito a 0 per ogni riga dello script.</small></span></label>
+      <div class="sezione">
+        <span class="etichetta">Elenco utenti e CHECKCOPERTURA</span>
+        <div class="azioni" style="margin-top:10px">
+          <button type="button" class="minuto" id="btnUtentiTutti1">Segna tutti a 1</button>
+          <button type="button" class="minuto" id="btnUtentiTutti0">Azzera tutti a 0</button>
+        </div>
+        <div class="tabellaUtenti" id="tabUtenti" style="margin-top:12px"></div>
       </div>
 
-      <div class="azioni" style="margin-top:0">
+      <div class="azioni" style="margin-top:16px">
         <button type="button" id="btnScaricaUtenti">Scarica lo script INSERT_UTENTI</button>
       </div>
       <pre class="sqlprev" id="utentiPrev" style="margin-top:16px"></pre>
@@ -604,7 +618,7 @@ depSedi.ondrop=function(e){e.preventDefault();depSedi.classList.remove('sopra');
 inpSedi.onchange=function(){ if(inpSedi.files[0]) leggiSedi(inpSedi.files[0]); };
 
 /* ================= PARTE 3 — UTENTI ================= */
-var U={wb:null,nome:null,foglio:null,righe:[],hdr:1,dat:2,cols:[]};
+var U={wb:null,nome:null,foglio:null,righe:[],hdr:1,dat:2,cols:[],righeValide:[],checks:[],saltate:0};
 
 function leggiUtenti(file){
   if(typeof XLSX==="undefined"){ $('allarmeLib').classList.remove('chiuso'); return; }
@@ -634,7 +648,7 @@ function aggiornaUtenti(){
     U.hdr=r; U.dat=r+1; $('hdrUtenti').value=r; $('datUtenti').value=r+1; aggiornaUtenti();
   });
   disegnaColonneUtenti();
-  anteprimaUtenti();
+  disegnaTabellaUtenti();
 }
 function disegnaColonneUtenti(){
   [['colMatricola',0],['colSedeUscita',1]].forEach(function(pair){
@@ -661,16 +675,59 @@ function righeUtenti(){
   }
   return {righe:out,saltate:saltate};
 }
+function disegnaTabellaUtenti(){
+  var dati=righeUtenti();
+  var vecchi={};
+  U.righeValide.forEach(function(r,i){ vecchi[r.matricola+""+r.sedeUscita]=U.checks[i]; });
+  U.righeValide=dati.righe;
+  U.saltate=dati.saltate;
+  U.checks=U.righeValide.map(function(r){
+    var k=r.matricola+""+r.sedeUscita;
+    return vecchi[k]!==undefined?vecchi[k]:false;
+  });
+
+  var box=$('tabUtenti');
+  if(!U.righeValide.length){
+    box.innerHTML='<p class="nota" style="margin:0">Nessuna riga con MATRICOLA e CODICE_SEDE_USCITA validi.</p>';
+    anteprimaUtenti();
+    return;
+  }
+  var t=document.createElement("table");
+  var thead=document.createElement("thead"), trh=document.createElement("tr");
+  ["MATRICOLA","CODICE_SEDE_USCITA","CHECKCOPERTURA"].forEach(function(h){
+    var th=document.createElement("th"); th.textContent=h; trh.appendChild(th);
+  });
+  thead.appendChild(trh); t.appendChild(thead);
+  var tbody=document.createElement("tbody");
+  U.righeValide.forEach(function(r,i){
+    var tr=document.createElement("tr");
+    var td1=document.createElement("td"); td1.textContent=r.matricola;
+    var td2=document.createElement("td"); td2.textContent=r.sedeUscita;
+    var td3=document.createElement("td"); td3.className="chk";
+    var cb=document.createElement("input"); cb.type="checkbox"; cb.checked=U.checks[i];
+    cb.onchange=function(){ U.checks[i]=cb.checked; anteprimaUtenti(); };
+    td3.appendChild(cb);
+    tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+    tbody.appendChild(tr);
+  });
+  t.appendChild(tbody);
+  box.innerHTML=""; box.appendChild(t);
+  anteprimaUtenti();
+}
+function applicaCheckCoperturaTutti(v){
+  U.checks=U.checks.map(function(){ return v; });
+  var caselle=$('tabUtenti').querySelectorAll('input[type=checkbox]');
+  for(var i=0;i<caselle.length;i++) caselle[i].checked=v;
+  anteprimaUtenti();
+}
 function insertUtente(riga,idBando,checkCopertura){
   return "INSERT INTO MOBINT.BANDO_OrdinarioCT_UTENTI (ID, MATRICOLA, CODICE_SEDE_USCITA, ID_BANDO, CHECKCOPERTURA) VALUES ("+
     "(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.BANDO_OrdinarioCT_UTENTI), "+apice(riga.matricola)+", "+apice(riga.sedeUscita)+", "+idBando+", "+checkCopertura+");";
 }
 function scriptUtenti(){
   var idBando=$('utentiBando').value.trim();
-  var checkCopertura=$('utentiCheckCopertura').checked?1:0;
-  var dati=righeUtenti();
-  var righeSql=dati.righe.map(function(r){ return insertUtente(r,idBando,checkCopertura); });
-  return {righe:righeSql,saltate:dati.saltate,tot:dati.righe.length};
+  var righeSql=U.righeValide.map(function(r,i){ return insertUtente(r,idBando,U.checks[i]?1:0); });
+  return {righe:righeSql,saltate:U.saltate,tot:righeSql.length};
 }
 function anteprimaUtenti(){
   var pre=$('utentiPrev');
@@ -694,10 +751,11 @@ $('hdrUtenti').onchange=function(){
   aggiornaUtenti();
 };
 $('datUtenti').onchange=function(){ var v=Math.max(2,Number(this.value)||2); U.dat=v; this.value=v; aggiornaUtenti(); };
-$('colMatricola').onchange=anteprimaUtenti;
-$('colSedeUscita').onchange=anteprimaUtenti;
+$('colMatricola').onchange=disegnaTabellaUtenti;
+$('colSedeUscita').onchange=disegnaTabellaUtenti;
+$('btnUtentiTutti1').onclick=function(){ applicaCheckCoperturaTutti(true); };
+$('btnUtentiTutti0').onclick=function(){ applicaCheckCoperturaTutti(false); };
 $('utentiBando').oninput=anteprimaUtenti;
-$('utentiCheckCopertura').onchange=anteprimaUtenti;
 $('btnScaricaUtenti').onclick=function(){
   if(!U.cols.length){ alert("Carica prima il file degli utenti."); return; }
   if(!$('utentiBando').value.trim()){ alert("Indica l'ID_BANDO."); return; }
