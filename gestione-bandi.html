@@ -218,7 +218,7 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
   <!-- ============ PARTE 2 — SEDI USCITA ============ -->
   <section class="carta">
     <h2>Sedi in uscita — MOBINT.BANDO_*_SEDI_USCITA</h2>
-    <p class="aiuto">Scegli la tabella di destinazione, carica l'Excel con le sedi, scegli le colonne per CODICE_SEDE e N_MAX_USCITA (più NUM_DIP e DOTAZIONE per BANDO_104CT_SEDI_USCITA) e indica l'ID_BANDO. L'<code>ID</code> non si inserisce: viene calcolato dallo script con <code>(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.&lt;tabella&gt;)</code>, come per i bandi. Le righe con N_MAX_USCITA a 0 vengono escluse dallo script.</p>
+    <p class="aiuto">Scegli la tabella di destinazione, carica l'Excel con le sedi, scegli le colonne per CODICE_SEDE e N_MAX_USCITA (più NUM_DIP e DOTAZIONE per BANDO_OrdinarioPNRR_SEDI_USCITA e BANDO_104PNRR_SEDI_USCITA) e indica l'ID_BANDO. L'<code>ID</code> non si inserisce: viene calcolato dallo script con <code>(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.&lt;tabella&gt;)</code>, come per i bandi. Le righe con N_MAX_USCITA a 0 vengono escluse dallo script.</p>
 
     <div class="campi">
       <div class="campo"><label for="sediTabella">Tabella</label>
@@ -226,6 +226,7 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
           <option value="BANDO_OrdinarioCT_SEDI_USCITA">BANDO_OrdinarioCT_SEDI_USCITA</option>
           <option value="BANDO_OrdinarioPNRR_SEDI_USCITA">BANDO_OrdinarioPNRR_SEDI_USCITA</option>
           <option value="BANDO_104CT_SEDI_USCITA">BANDO_104CT_SEDI_USCITA</option>
+          <option value="BANDO_104PNRR_SEDI_USCITA">BANDO_104PNRR_SEDI_USCITA</option>
         </select>
       </div>
     </div>
@@ -250,7 +251,7 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
         <div class="campo"><label for="colUscita">Colonna N_MAX_USCITA</label><select id="colUscita"></select></div>
         <div class="campo"><label for="sediBando">ID_BANDO</label><input type="number" id="sediBando" min="0" step="1"></div>
       </div>
-      <div class="campi chiuso" id="sediCampi104ct">
+      <div class="campi chiuso" id="sediCampiExtra">
         <div class="campo"><label for="colNumDip">Colonna NUM_DIP</label><select id="colNumDip"></select></div>
         <div class="campo"><label for="colDotazione">Colonna DOTAZIONE</label><select id="colDotazione"></select></div>
       </div>
@@ -578,13 +579,14 @@ function disegnaColonneSedi(){
     else if(S.cols[pair[1]]) sel.value=String(S.cols[pair[1]].i);
   });
 }
-function sedi104ct(){ return $('sediTabella').value==="BANDO_104CT_SEDI_USCITA"; }
+var TABELLE_SEDI_CON_EXTRA=["BANDO_OrdinarioPNRR_SEDI_USCITA","BANDO_104PNRR_SEDI_USCITA"];
+function sediHaExtra(tabella){ return TABELLE_SEDI_CON_EXTRA.indexOf(tabella)>-1; }
 function aggiornaVisibilitaSedi(){
-  $('sediCampi104ct').classList.toggle('chiuso',!sedi104ct());
+  $('sediCampiExtra').classList.toggle('chiuso',!sediHaExtra($('sediTabella').value));
 }
 function righeSedi(){
   var cSede=Number($('colSede').value), cUscita=Number($('colUscita').value);
-  var extra=sedi104ct();
+  var extra=sediHaExtra($('sediTabella').value);
   var cNumDip=extra?Number($('colNumDip').value):null;
   var cDotazione=extra?Number($('colDotazione').value):null;
   var out=[], saltate=0, azzerate=0;
@@ -604,7 +606,7 @@ function righeSedi(){
 function insertSede(riga,idBando,tabella){
   var cols=["ID","CODICE_SEDE","N_MAX_USCITA","ID_BANDO"];
   var vals=["(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT."+tabella+")",apice(riga.sede),riga.uscita,idBando];
-  if(tabella==="BANDO_104CT_SEDI_USCITA"){
+  if(sediHaExtra(tabella)){
     cols.push("NUM_DIP","DOTAZIONE");
     vals.push(riga.numDip,riga.dotazione);
   }
