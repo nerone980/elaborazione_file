@@ -209,7 +209,7 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
   <!-- ============ PARTE 2 — SEDI USCITA ============ -->
   <section class="carta">
     <h2>Sedi in uscita — MOBINT.BANDO_OrdinarioCT_SEDI_USCITA</h2>
-    <p class="aiuto">Carica l'Excel con le sedi, scegli le colonne per CODICE_SEDE e N_MAX_USCITA, indica l'ID_BANDO e l'ID di partenza. L'<code>ID</code> di riga viene assegnato in sequenza, a incrementi di 1 a partire da quel valore.</p>
+    <p class="aiuto">Carica l'Excel con le sedi, scegli le colonne per CODICE_SEDE e N_MAX_USCITA, indica l'ID_BANDO e l'ID di partenza. L'<code>ID</code> di riga viene assegnato in sequenza, a incrementi di 1 a partire da quel valore. Le righe con N_MAX_USCITA a 0 vengono escluse dallo script.</p>
 
     <div class="deposito" id="depSedi" tabindex="0" role="button" aria-label="Carica il file delle sedi in uscita">
       <strong>Trascina qui il file, o clicca per sceglierlo</strong>
@@ -502,15 +502,17 @@ function disegnaColonneSedi(){
 }
 function righeSedi(){
   var cSede=Number($('colSede').value), cUscita=Number($('colUscita').value);
-  var out=[], saltate=0;
+  var out=[], saltate=0, azzerate=0;
   for(var r=S.dat-1;r<S.righe.length;r++){
     var riga=S.righe[r]||[];
     if(riga.every(function(c){return c===null||c===undefined||String(c).trim()==="";})) continue;
     var sede=testoCella(riga[cSede]);
     if(sede===""){ saltate++; continue; }
-    out.push({sede:sede,uscita:numero(riga[cUscita])});
+    var uscita=numero(riga[cUscita]);
+    if(uscita===0){ azzerate++; continue; }
+    out.push({sede:sede,uscita:uscita});
   }
-  return {righe:out,saltate:saltate};
+  return {righe:out,saltate:saltate,azzerate:azzerate};
 }
 function insertSede(riga,id,idBando){
   return "INSERT INTO MOBINT.BANDO_OrdinarioCT_SEDI_USCITA (ID, CODICE_SEDE, N_MAX_USCITA, ID_BANDO) VALUES ("+
@@ -521,7 +523,7 @@ function scriptSedi(){
   var idIniz=Number($('sediIdIniziale').value)||1;
   var dati=righeSedi();
   var righeSql=dati.righe.map(function(r,i){ return insertSede(r,idIniz+i,idBando); });
-  return {righe:righeSql,saltate:dati.saltate,tot:dati.righe.length};
+  return {righe:righeSql,saltate:dati.saltate,azzerate:dati.azzerate,tot:dati.righe.length};
 }
 function anteprimaSedi(){
   var pre=$('sediPrev');
@@ -536,6 +538,7 @@ function anteprimaSedi(){
   else pre.textContent=o.righe[0];
   var note=[o.tot+" INSERT nello script (più la COMMIT finale)"];
   if(o.saltate) note.push(o.saltate+" righe saltate: manca il codice sede");
+  if(o.azzerate) note.push(o.azzerate+" righe escluse: N_MAX_USCITA a 0");
   $('sediConta').textContent=note.join(" · ")+".";
 }
 $('foglioSedi').onchange=function(){ caricaFoglioSedi(this.value); };
