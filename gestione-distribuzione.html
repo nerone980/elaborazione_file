@@ -310,7 +310,7 @@ button.minuto:hover:not(:disabled){background:var(--alto);color:var(--testo);bor
         <span class="indice" id="idxCalc">3</span>
         <div>
           <h2>Calcolo</h2>
-          <p class="riassunto" id="statoCalcolo">In attesa dei file.</p>
+          <p class="riassunto" id="statoCalcolo" aria-live="polite">In attesa dei file.</p>
         </div>
       </div>
       <div class="testa-azioni"><button id="btnCalcola" disabled>Calcola il netto</button></div>
@@ -349,7 +349,7 @@ button.minuto:hover:not(:disabled){background:var(--alto);color:var(--testo);bor
       </div>
 
       <div class="tabella" id="tabella"></div>
-      <p class="nota" id="contaRighe"></p>
+      <p class="nota" id="contaRighe" aria-live="polite"></p>
 
       <div class="sezione">
         <span class="etichetta">Colonne del primo file nell'Excel</span>
@@ -377,11 +377,12 @@ button.minuto:hover:not(:disabled){background:var(--alto);color:var(--testo);bor
         </div>
 
         <pre class="sqlprev" id="sqlPrev"></pre>
-        <p class="nota" id="sqlConta"></p>
+        <p class="nota" id="sqlConta" aria-live="polite"></p>
 
         <div class="azioni" style="margin-top:0">
           <button id="btnSqlOrd">SCRIPT_ORDINARIO</button>
           <button id="btnSql104">SCRIPT_104</button>
+          <button type="button" class="calmo" id="btnSqlCopia">Copia SCRIPT_ORDINARIO</button>
         </div>
       </div>
     </div>
@@ -1322,6 +1323,25 @@ function scarica(testo,nome){
   document.body.appendChild(a); a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); if(a.parentNode) a.parentNode.removeChild(a); },0);
 }
+function copiaTesto(testo,btn){
+  var originale=btn.textContent;
+  function fatto(ok){
+    btn.textContent=ok?"Copiato ✓":"Copia non riuscita";
+    setTimeout(function(){ btn.textContent=originale; },1600);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(testo).then(function(){ fatto(true); },function(){ fatto(false); });
+  } else {
+    try{
+      var ta=document.createElement("textarea");
+      ta.value=testo; ta.style.position="fixed"; ta.style.opacity="0";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      var ok=document.execCommand("copy");
+      document.body.removeChild(ta);
+      fatto(ok);
+    }catch(e){ fatto(false); }
+  }
+}
 function preparaSql(){
   var s1=$('sqlSede'), s2=$('sqlQual');
   if(s1.options.length!==P.cols.length){
@@ -1364,11 +1384,10 @@ function anteprimaSql(){
   if(o.virgolettate) note.push(o.virgolettate+" qualifiche non numeriche, scritte fra apici");
   $('sqlConta').textContent=note.join(" · ")+".";
 }
-function generaSql(tabella,nomeBase){
-  if(!RES) return;
+function testoSql(tabella,nomeBase){
   var o=istruzioniSql(tabella);
-  if(!o.righe.length){ alert("Con i criteri attuali non c'è nessuna riga da inserire."); return; }
-  var d=new Date(), p=function(x){return String(x).padStart(2,"0");};
+  if(!o.righe.length) return null;
+  var d=new Date();
   var testa=[
     "-- "+nomeBase+" — generato il "+d.toLocaleString('it-IT'),
     "-- Tabella: MOBINT."+tabella+"   ID_BANDO: "+o.bando,
@@ -1378,7 +1397,14 @@ function generaSql(tabella,nomeBase){
     "-- Istruzioni: "+o.righe.length,
     ""
   ];
-  scarica(testa.concat(o.righe).join("\r\n")+"\r\n",
+  return testa.concat(o.righe).join("\r\n")+"\r\n";
+}
+function generaSql(tabella,nomeBase){
+  if(!RES) return;
+  var testo=testoSql(tabella,nomeBase);
+  if(!testo){ alert("Con i criteri attuali non c'è nessuna riga da inserire."); return; }
+  var d=new Date(), p=function(x){return String(x).padStart(2,"0");};
+  scarica(testo,
     nomeBase.toLowerCase()+"_"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes())+".sql");
 }
 
@@ -1415,6 +1441,12 @@ Array.prototype.forEach.call(document.querySelectorAll('input[name=neg]'),functi
 });
 $('btnSqlOrd').onclick=function(){ generaSql("SEDI_BANDO_ORDINARIO","SCRIPT_ORDINARIO"); };
 $('btnSql104').onclick=function(){ generaSql("SEDI_BANDO_104","SCRIPT_104"); };
+$('btnSqlCopia').onclick=function(){
+  if(!RES) return;
+  var testo=testoSql("SEDI_BANDO_ORDINARIO","SCRIPT_ORDINARIO");
+  if(!testo){ alert("Con i criteri attuali non c'è nessuna riga da inserire."); return; }
+  copiaTesto(testo,this);
+};
 ['sqlBando','sqlSede','sqlQual','sqlPositivi'].forEach(function(id){ $(id).onchange=anteprimaSql; });
 $('sqlBando').oninput=anteprimaSql;
 $('btnReset').onclick=function(){ location.reload(); };
