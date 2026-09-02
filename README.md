@@ -44,13 +44,13 @@ Foglio `RIEPILOGO`: parametri usati, legenda colori, colonne incluse, totali.
 
 ### Script SQL
 
-Due varianti (`SCRIPT_ORDINARIO` / `SCRIPT_104`, tabelle `MOBINT.SEDI_BANDO_ORDINARIO` / `MOBINT.SEDI_BANDO_104`): una `INSERT` per riga con `N_POSTI_ENTRATA` pari al netto appena calcolato, `ID_BANDO` parametrico, colonne del file 1 scelte per `CODICE_SEDE` e `ID_QUALIFICA`. Si può limitare l'export alle sole righe con almeno un posto positivo.
+Due varianti (`SCRIPT_ORDINARIO` / `SCRIPT_104`, tabelle `MOBINT.SEDI_BANDO_ORDINARIO` / `MOBINT.SEDI_BANDO_104`): una `INSERT` per riga con `N_POSTI_ENTRATA` pari al netto appena calcolato, `ID_BANDO` parametrico, colonne del file 1 scelte per `CODICE_SEDE` e `ID_QUALIFICA`. Si può limitare l'export alle sole righe con almeno un posto positivo. Il pulsante "Copia SCRIPT_ORDINARIO" copia negli appunti lo stesso script che genererebbe il download, per chi lavora direttamente in un client SQL.
 
 ---
 
 ## `gestione-bandi.html` — Gestione Bandi
 
-Tre generatori indipendenti di script SQL di inserimento (schema `MOBINT`), ciascuno con anteprima della prima `INSERT` e conteggio delle righe prima dello scaricamento.
+Tre generatori indipendenti di script SQL di inserimento (schema `MOBINT`), ciascuno con anteprima della prima `INSERT`, conteggio delle righe e un pulsante "Copia lo script" (oltre al download) prima dello scaricamento. Una barra di navigazione fissa in cima alla pagina permette di saltare direttamente a una delle tre sezioni.
 
 ### 1. Nuovo bando — `MOBINT.BANDI`
 
@@ -79,6 +79,10 @@ Tabelle disponibili: `BANDO_OrdinarioCT_UTENTI`, `BANDO_OrdinarioPNRR_UTENTI`, `
 Gli script di sedi e utenti includono nel nome del file un suffisso derivato dalla tabella scelta (es. `insert_sedi_uscita_104ct_20260101_1200.sql`), per distinguere gli script generati per tabelle diverse nella stessa sessione di lavoro.
 
 ---
+
+## Interfaccia e accessibilità
+
+Le tre pagine condividono lo stesso stile (dark, IBM Plex, accento ambra) e le stesse convenzioni: un pulsante "Copia" accanto a ogni script generato, per usarlo subito in un client SQL senza passare dal download, e gli elementi di stato/conteggio (es. `statoCalcolo`, `bandiConta`, `sqlConta`) marcati `aria-live` in modo che uno screen reader annunci i cambiamenti senza spostare il focus. Niente icone o emoji: lo stile è deliberatamente tipografico.
 
 ## Manutenzione di questo README
 
