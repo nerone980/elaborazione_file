@@ -27,6 +27,8 @@
   --sp:22px;
 }
 *{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:66px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 body{
   margin:0;background:var(--fondo);color:var(--testo);
   font-family:var(--sans);font-size:15.5px;line-height:1.55;
@@ -35,6 +37,17 @@ body{
 }
 .wrap{max-width:1080px;margin:0 auto;padding:0 26px}
 ::selection{background:var(--ottone);color:#12191F}
+
+.salti{position:sticky;top:0;z-index:30;background:rgba(17,25,32,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--bordo)}
+.salti .wrap{display:flex;align-items:center;gap:8px;overflow-x:auto;padding-top:11px;padding-bottom:11px;scrollbar-width:none}
+.salti .wrap::-webkit-scrollbar{display:none}
+.salto{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;background:none;border:1px solid var(--bordo);color:var(--fioco);
+  font-family:var(--cond);font-size:12.5px;font-weight:600;letter-spacing:.04em;padding:6px 12px;cursor:pointer;border-radius:2px;
+  text-decoration:none;transition:color .15s,border-color .15s}
+.salto:hover,.salto:focus-visible{color:var(--testo);border-color:var(--bordo-forte)}
+
+@keyframes lampo{0%{background:#3A2E14}100%{background:var(--campo)}}
+.appena-aggiunta{animation:lampo 1.1s ease-out}
 
 .torna{display:inline-flex;align-items:center;gap:6px;margin:20px 0 0;
   font-family:var(--cond);font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;
@@ -137,6 +150,14 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
 </head>
 <body>
 
+<nav class="salti" aria-label="Sezioni della pagina">
+  <div class="wrap">
+    <a class="salto" href="#sezione-bandi">Nuovo bando</a>
+    <a class="salto" href="#sezione-sedi">Sedi in uscita</a>
+    <a class="salto" href="#sezione-utenti">Utenti</a>
+  </div>
+</nav>
+
 <div class="wrap">
   <a class="torna" href="index.html">← Utility Mobilità</a>
   <header class="testata">
@@ -150,7 +171,7 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
   </div>
 
   <!-- ============ PARTE 1 — BANDI ============ -->
-  <section class="carta">
+  <section class="carta" id="sezione-bandi">
     <h2>Nuovo bando — MOBINT.BANDI</h2>
     <p class="aiuto">Compila i valori del bando, aggiungilo alla lista qui sotto (puoi metterne più di uno, come nell'esempio con due bandi in uno script) e poi scarica lo script con tutte le INSERT più la COMMIT finale. L'<code>ID</code> non si inserisce: viene calcolato dallo script con <code>(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.BANDI)</code>, esattamente come nel modello fornito.</p>
 
@@ -209,7 +230,7 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
     <div class="azioni" style="margin-top:16px">
       <button type="button" id="btnAggiungiBando">Aggiungi alla lista</button>
     </div>
-    <p class="nota manca" id="bandoErrore" style="display:none"></p>
+    <p class="nota manca" id="bandoErrore" style="display:none" role="alert"></p>
 
     <div class="sezione">
       <span class="etichetta">Bandi in coda</span>
@@ -218,14 +239,15 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
 
       <div class="azioni" style="margin-top:0">
         <button type="button" id="btnScaricaBandi" disabled>Scarica lo script INSERT_BANDI</button>
+        <button type="button" class="calmo" id="btnCopiaBandi" disabled>Copia lo script</button>
       </div>
       <pre class="sqlprev" id="bandiPrev" style="margin-top:16px"></pre>
-      <p class="nota" id="bandiConta"></p>
+      <p class="nota" id="bandiConta" aria-live="polite"></p>
     </div>
   </section>
 
   <!-- ============ PARTE 2 — SEDI USCITA ============ -->
-  <section class="carta">
+  <section class="carta" id="sezione-sedi">
     <h2>Sedi in uscita — MOBINT.BANDO_*_SEDI_USCITA</h2>
     <p class="aiuto">Scegli la tabella di destinazione, carica l'Excel con le sedi, scegli le colonne per CODICE_SEDE e N_MAX_USCITA (più NUM_DIP e DOTAZIONE per BANDO_OrdinarioPNRR_SEDI_USCITA e BANDO_104PNRR_SEDI_USCITA) e indica l'ID_BANDO. L'<code>ID</code> non si inserisce: viene calcolato dallo script con <code>(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.&lt;tabella&gt;)</code>, come per i bandi. Le righe con N_MAX_USCITA a 0 vengono escluse dallo script.</p>
 
@@ -267,14 +289,15 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
 
       <div class="azioni" style="margin-top:0">
         <button type="button" id="btnScaricaSedi">Scarica lo script INSERT_SEDI_USCITA</button>
+        <button type="button" class="calmo" id="btnCopiaSedi">Copia lo script</button>
       </div>
       <pre class="sqlprev" id="sediPrev" style="margin-top:16px"></pre>
-      <p class="nota" id="sediConta"></p>
+      <p class="nota" id="sediConta" aria-live="polite"></p>
     </div>
   </section>
 
   <!-- ============ PARTE 3 — UTENTI ============ -->
-  <section class="carta">
+  <section class="carta" id="sezione-utenti">
     <h2>Utenti — MOBINT.BANDO_*_UTENTI</h2>
     <p class="aiuto">Scegli la tabella di destinazione, carica l'Excel con gli utenti, scegli le colonne per MATRICOLA e CODICE_SEDE_USCITA e indica l'ID_BANDO. L'<code>ID</code> non si inserisce: viene calcolato dallo script con <code>(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.&lt;tabella&gt;)</code>, come per i bandi e per le sedi. CHECKCOPERTURA è modificabile riga per riga nell'elenco qui sotto: di default è 0 per ognuna.</p>
 
@@ -321,9 +344,10 @@ table{border-collapse:collapse;font-size:12.5px;font-family:var(--mono);width:10
 
       <div class="azioni" style="margin-top:16px">
         <button type="button" id="btnScaricaUtenti">Scarica lo script INSERT_UTENTI</button>
+        <button type="button" class="calmo" id="btnCopiaUtenti">Copia lo script</button>
       </div>
       <pre class="sqlprev" id="utentiPrev" style="margin-top:16px"></pre>
-      <p class="nota" id="utentiConta"></p>
+      <p class="nota" id="utentiConta" aria-live="polite"></p>
     </div>
   </section>
 </div>
@@ -361,6 +385,25 @@ function scarica(testo,nome){
   a.href=URL.createObjectURL(b); a.download=nome;
   document.body.appendChild(a); a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); if(a.parentNode) a.parentNode.removeChild(a); },0);
+}
+function copiaTesto(testo,btn){
+  var originale=btn.textContent;
+  function fatto(ok){
+    btn.textContent=ok?"Copiato ✓":"Copia non riuscita";
+    setTimeout(function(){ btn.textContent=originale; },1600);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(testo).then(function(){ fatto(true); },function(){ fatto(false); });
+  } else {
+    try{
+      var ta=document.createElement("textarea");
+      ta.value=testo; ta.style.position="fixed"; ta.style.opacity="0";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      var ok=document.execCommand("copy");
+      document.body.removeChild(ta);
+      fatto(ok);
+    }catch(e){ fatto(false); }
+  }
 }
 function nomeFile(base,ext){
   var d=new Date(), p=function(x){return String(x).padStart(2,"0");};
@@ -431,7 +474,7 @@ function etichettaStato(v){
     5:"Concluso",6:"Chiuso",7:"PubblicazioneEsiti",8:"AperturaStraordinaria",9:"PubblicazioneGraduatoria"
   }[Number(v)]||v;
 }
-function disegnaCodaBandi(){
+function disegnaCodaBandi(evidenziaUltima){
   var box=$('bandiCoda');
   box.innerHTML="";
   $('bandiVuoto').style.display = BANDI.length ? "none" : "block";
@@ -443,8 +486,10 @@ function disegnaCodaBandi(){
     btn.textContent="Togli";
     btn.onclick=function(){ BANDI.splice(i,1); disegnaCodaBandi(); aggiornaScriptBandi(); };
     riga.appendChild(d); riga.appendChild(btn); box.appendChild(riga);
+    if(evidenziaUltima && i===BANDI.length-1) riga.className+=" appena-aggiunta";
   });
   $('btnScaricaBandi').disabled = BANDI.length===0;
+  $('btnCopiaBandi').disabled = BANDI.length===0;
 }
 function insertBando(b){
   return "INSERT INTO MOBINT.BANDI (\n"+
@@ -489,12 +534,16 @@ $('btnAggiungiBando').onclick=function(){
   if(manca.length){ err.textContent="Manca: "+manca.join(", ")+"."; err.style.display="block"; return; }
   err.style.display="none";
   BANDI.push(b);
-  disegnaCodaBandi();
+  disegnaCodaBandi(true);
   aggiornaScriptBandi();
 };
 $('btnScaricaBandi').onclick=function(){
   if(!BANDI.length) return;
   scarica(scriptBandi(),nomeFile("insert_bandi","sql"));
+};
+$('btnCopiaBandi').onclick=function(){
+  if(!BANDI.length) return;
+  copiaTesto(scriptBandi(),this);
 };
 disegnaCodaBandi();
 aggiornaScriptBandi();
@@ -667,12 +716,20 @@ $('colUscita').onchange=anteprimaSedi;
 $('colNumDip').onchange=anteprimaSedi;
 $('colDotazione').onchange=anteprimaSedi;
 $('sediBando').oninput=anteprimaSedi;
-$('btnScaricaSedi').onclick=function(){
-  if(!S.cols.length){ alert("Carica prima il file delle sedi."); return; }
-  if(!$('sediBando').value.trim()){ alert("Indica l'ID_BANDO."); return; }
+function costruisciScriptSedi(){
+  if(!S.cols.length){ alert("Carica prima il file delle sedi."); return null; }
+  if(!$('sediBando').value.trim()){ alert("Indica l'ID_BANDO."); return null; }
   var o=scriptSedi();
-  if(!o.righe.length){ alert("Con i criteri attuali non c'è nessuna riga da inserire."); return; }
-  scarica(o.righe.join("\n")+"\nCOMMIT;\n",nomeFile("insert_sedi_uscita_"+tagTabella($('sediTabella').value),"sql"));
+  if(!o.righe.length){ alert("Con i criteri attuali non c'è nessuna riga da inserire."); return null; }
+  return o.righe.join("\n")+"\nCOMMIT;\n";
+}
+$('btnScaricaSedi').onclick=function(){
+  var testo=costruisciScriptSedi();
+  if(testo) scarica(testo,nomeFile("insert_sedi_uscita_"+tagTabella($('sediTabella').value),"sql"));
+};
+$('btnCopiaSedi').onclick=function(){
+  var testo=costruisciScriptSedi();
+  if(testo) copiaTesto(testo,this);
 };
 
 var depSedi=$('depSedi'), inpSedi=$('inpSedi');
@@ -824,12 +881,20 @@ $('btnUtentiTutti1').onclick=function(){ applicaCheckCoperturaTutti(true); };
 $('btnUtentiTutti0').onclick=function(){ applicaCheckCoperturaTutti(false); };
 $('utentiTabella').onchange=anteprimaUtenti;
 $('utentiBando').oninput=anteprimaUtenti;
-$('btnScaricaUtenti').onclick=function(){
-  if(!U.cols.length){ alert("Carica prima il file degli utenti."); return; }
-  if(!$('utentiBando').value.trim()){ alert("Indica l'ID_BANDO."); return; }
+function costruisciScriptUtenti(){
+  if(!U.cols.length){ alert("Carica prima il file degli utenti."); return null; }
+  if(!$('utentiBando').value.trim()){ alert("Indica l'ID_BANDO."); return null; }
   var o=scriptUtenti();
-  if(!o.righe.length){ alert("Con i criteri attuali non c'è nessuna riga da inserire."); return; }
-  scarica(o.righe.join("\n")+"\nCOMMIT;\n",nomeFile("insert_utenti_"+tagTabella($('utentiTabella').value),"sql"));
+  if(!o.righe.length){ alert("Con i criteri attuali non c'è nessuna riga da inserire."); return null; }
+  return o.righe.join("\n")+"\nCOMMIT;\n";
+}
+$('btnScaricaUtenti').onclick=function(){
+  var testo=costruisciScriptUtenti();
+  if(testo) scarica(testo,nomeFile("insert_utenti_"+tagTabella($('utentiTabella').value),"sql"));
+};
+$('btnCopiaUtenti').onclick=function(){
+  var testo=costruisciScriptUtenti();
+  if(testo) copiaTesto(testo,this);
 };
 
 var depUtenti=$('depUtenti'), inpUtenti=$('inpUtenti');
