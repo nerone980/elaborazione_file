@@ -424,10 +424,11 @@ function itn(n){return (Math.round(n*100)/100).toLocaleString('it-IT');}
 function accorcia(s,n){ s=String(s||""); return s.length>n ? s.slice(0,n-1)+"…" : s; }
 
 /* ---------- normalizzazione ---------- */
+var ERRORE_EXCEL=/^#(N\/D|N\/A|REF!|VALORE!|VALUE!|DIV\/0!|NOME\?|NAME\?|NULL!|NUM!)$/i;
 function chiave(v,num){
   if(v===null||v===undefined) return "";
   var s=String(v).trim();
-  if(s==="") return "";
+  if(s===""||ERRORE_EXCEL.test(s)) return "";
   if(num && /^-?\d+([.,]0+)?$/.test(s)){
     var n=Number(s.replace(',','.'));
     if(isFinite(n)) return String(n);
