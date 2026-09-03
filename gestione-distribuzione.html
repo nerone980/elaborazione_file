@@ -389,7 +389,7 @@ button.minuto:hover:not(:disabled){background:var(--alto);color:var(--testo);bor
   </section>
 
   <p class="pie">
-    Tutto avviene nel browser: nessun file viene inviato da nessuna parte. Celle vuote, trattini e testo valgono zero. Le chiavi presenti solo nei file da sottrarre non tolgono posti a nessuno e finiscono nel foglio <code>NON_ABBINATE</code> dell'Excel.
+    Tutto avviene nel browser: nessun file viene inviato da nessuna parte. Celle vuote, trattini e testo valgono zero. Le chiavi presenti solo nei file da sottrarre, e le righe con una chiave non valida (vuota o un errore Excel come <code>#N/D</code>), non tolgono posti a nessuno e finiscono nel foglio <code>NON_ABBINATE</code> dell'Excel, con l'indicazione del file, della sorgente e del motivo.
   </p>
 </div>
 
@@ -1020,11 +1020,21 @@ function calcola(){
     var f=x.f;
     var colSum=f.sum.slice().sort(function(a,b){return a-b;});
     var regole=costruisciRegole(f,num);
-    var agg={}, ordine=[], nRiscritte=0;
+    var agg={}, ordine=[], nRiscritte=0, nonValide=[];
     for(var r=f.dat-1;r<f.righe.length;r++){
       var riga=f.righe[r]||[];
+      if(riga.every(function(c){return c===null||c===undefined||String(c).trim()==="";})) continue;
       var kk=chiaviRiga(f,riga,num,regole);
-      if(kk.finali.some(function(p){return p==="";})) continue;
+      if(kk.finali.some(function(p){return p==="";})){
+        var valoriInv=colSum.map(function(cs){ return numero(riga[cs]); });
+        nonValide.push({
+          riga:r+1,
+          grezze:P.keys.map(function(i1){ return testoCella(riga[f.map[i1]]); }),
+          valori:valoriInv,
+          tot:valoriInv.reduce(function(a,b){return a+b;},0)
+        });
+        continue;
+      }
       var k=kk.finali.join("\u0001");
       if(!agg[k]){ agg[k]={valori:colSum.map(function(){return 0;}),righe:[],parti:kk.finali,origini:{}}; ordine.push(k); }
       for(var j=0;j<colSum.length;j++) agg[k].valori[j]+=numero(riga[colSum[j]]);
@@ -1034,7 +1044,7 @@ function calcola(){
     }
     x.colSum=colSum;
     x.nomi=colSum.map(function(i){return f.cols[i].nome;});
-    x.agg=agg; x.ordine=ordine; x.nRiscritte=nRiscritte; x.usate={};
+    x.agg=agg; x.ordine=ordine; x.nRiscritte=nRiscritte; x.usate={}; x.nonValide=nonValide;
   });
 
   var dett=[];
@@ -1065,19 +1075,24 @@ function calcola(){
   }
 
   var orfane=[], totOrf=0, nRiscritte=0;
+  var nonValide=[], totNonValide=0;
   attive.forEach(function(x){
     nRiscritte+=x.nRiscritte;
     x.ordine.forEach(function(k){
       if(x.usate[k]) return;
       var tot=x.agg[k].valori.reduce(function(a,b){return a+b;},0);
       if(tot<=0) return;
-      orfane.push({eti:x.eti,parti:x.agg[k].parti,valori:x.agg[k].valori,nomi:x.nomi,
+      orfane.push({eti:x.eti,f:x.f,parti:x.agg[k].parti,valori:x.agg[k].valori,nomi:x.nomi,
                    tot:tot,righe:x.agg[k].righe,origini:Object.keys(x.agg[k].origini)});
       totOrf+=tot;
     });
+    x.nonValide.forEach(function(nv){
+      nonValide.push({eti:x.eti,f:x.f,grezze:nv.grezze,riga:nv.riga,valori:nv.valori,nomi:x.nomi,tot:nv.tot});
+      totNonValide+=nv.tot;
+    });
   });
 
-  RES={out:out,orfane:orfane,dett:dett,attive:attive,totDisp:totDisp,totOrf:totOrf,
+  RES={out:out,orfane:orfane,nonValide:nonValide,dett:dett,attive:attive,totDisp:totDisp,totOrf:totOrf,totNonValide:totNonValide,
        nNeg:nNeg,nToccate:nToccate,nRiscritte:nRiscritte,numerico:num};
 
   FONTI.forEach(function(f){ if(fontePronta(f)) piega(f.el,true); });
@@ -1118,6 +1133,7 @@ function mostraRisultato(){
   if(RES.nRiscritte) targa(itn(RES.nRiscritte),"righe riscritte");
   if(RES.nNeg) targa(itn(RES.nNeg),"righe negative","allarme");
   if(RES.orfane.length) targa(itn(RES.orfane.length),"chiavi orfane","allarme");
+  if(RES.nonValide.length) targa(itn(RES.nonValide.length),"chiavi non valide","allarme");
 
   var m=$('messaggi'); m.innerHTML="";
   function msg(html,cls){ var d=document.createElement("div"); d.className="avviso"+(cls?" "+cls:""); d.innerHTML=html; m.appendChild(d); }
@@ -1133,6 +1149,7 @@ function mostraRisultato(){
   }
   if(RES.nNeg) msg("In "+RES.nNeg+" righe i posti da sottrarre superano quelli disponibili. Scegli qui sotto come trattarle; con il filtro puoi isolarle.");
   if(RES.orfane.length) msg(RES.orfane.length+" chiavi con valori maggiori di zero non compaiono nel primo file, per un totale di "+itn(RES.totOrf)+" posti che non vengono sottratti a nessuna riga. Le trovi nel foglio NON_ABBINATE dell'Excel.","ambra");
+  if(RES.nonValide.length) msg(RES.nonValide.length+" righe nei file da sottrarre hanno una chiave non valida (vuota o un errore Excel come #N/D) e non sono state confrontate con nulla, per un totale di "+itn(RES.totNonValide)+" posti. Le trovi nel foglio NON_ABBINATE dell'Excel.","ambra");
 
   disegnaTabella();
   preparaSql();
@@ -1238,16 +1255,22 @@ function esporta(){
   evidenziaModifiche(ws1,colsExp.length,posVal);
   XLSX.utils.book_append_sheet(wb,ws1,"RISULTATO");
 
-  var aoa2=[["FILE","RIGHE_NEL_FILE"].concat(nomiKey).concat(["CODICI_DI_ORIGINE","DETTAGLIO","TOT_NON_SOTTRATTO"])];
+  var sorgenteLbl=P.nome+" ("+P.foglio+")";
+  function fileLbl(f){ return f.nome+" ("+f.foglio+")"; }
+  var aoa2=[["FILE_DA_SOTTRARRE","SORGENTE","MOTIVO","RIGHE_NEL_FILE"].concat(nomiKey).concat(["CODICI_DI_ORIGINE","DETTAGLIO","TOT_NON_SOTTRATTO"])];
   RES.orfane.forEach(function(o){
     var org=o.origini.join("; ");
     if(org===o.parti.join(" / ")) org="";
-    aoa2.push([o.eti,o.righe.join(", ")].concat(o.parti)
+    aoa2.push([fileLbl(o.f),sorgenteLbl,"Chiave assente nel primo file",o.righe.join(", ")].concat(o.parti)
       .concat([org,o.nomi.map(function(n,j){return n+": "+o.valori[j];}).join("; "),o.tot]));
   });
-  if(RES.orfane.length){
+  RES.nonValide.forEach(function(nv){
+    aoa2.push([fileLbl(nv.f),sorgenteLbl,"Chiave non valida (vuota o errore Excel, es. #N/D)",String(nv.riga)].concat(nv.grezze)
+      .concat(["",nv.nomi.map(function(n,j){return n+": "+nv.valori[j];}).join("; "),nv.tot]));
+  });
+  if(RES.orfane.length || RES.nonValide.length){
     aoa2.push([]);
-    aoa2.push(["TOTALE",null].concat(nomiKey.map(function(){return null;})).concat([null,null,RES.totOrf]));
+    aoa2.push(["TOTALE",null,null,null].concat(nomiKey.map(function(){return null;})).concat([null,null,RES.totOrf+RES.totNonValide]));
   }
   var ws2=XLSX.utils.aoa_to_sheet(aoa2);
   ws2['!cols']=aoa2[0].map(function(h){return {wch:Math.min(46,Math.max(14,String(h).length+2))};});
@@ -1300,7 +1323,9 @@ function esporta(){
     ["Righe che nessun file tocca",RES.out.length-RES.nToccate],
     ["Righe con netto negativo",RES.nNeg],
     ["Chiavi senza corrispondenza",RES.orfane.length],
-    ["Posti non sottratti per mancata corrispondenza",RES.totOrf]
+    ["Posti non sottratti per mancata corrispondenza",RES.totOrf],
+    ["Righe con chiave non valida (vuota o errore Excel)",RES.nonValide.length],
+    ["Posti in righe con chiave non valida",RES.totNonValide]
   ]);
   var ws3=XLSX.utils.aoa_to_sheet(aoa3);
   ws3['!cols']=[{wch:46},{wch:56}];
