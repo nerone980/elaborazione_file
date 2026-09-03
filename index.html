@@ -66,7 +66,32 @@ h1{font-family:var(--cond);font-weight:700;font-size:40px;line-height:1.05;margi
 }
 .pulsante:hover .vai,.pulsante:focus-visible .vai{color:var(--ottone)}
 
-.pie{border-top:1px solid var(--bordo);margin-top:8px;padding:22px 0 40px;font-size:12.5px;color:var(--fioco);max-width:80ch}
+.pie{border-top:1px solid var(--bordo);margin-top:8px;padding:22px 0 12px;font-size:12.5px;color:var(--fioco);max-width:80ch}
+
+.readme{background:var(--pannello);border:1px solid var(--bordo);border-radius:3px;margin:0 0 60px}
+.readme summary{cursor:pointer;padding:18px 22px;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.readme summary::-webkit-details-marker{display:none}
+.readme summary strong{font-family:var(--cond);font-size:15px;font-weight:600;letter-spacing:.02em;color:var(--testo)}
+.readme summary span{font-family:var(--mono);font-size:13px;color:var(--fioco);flex:0 0 auto}
+.readme:hover summary strong,.readme summary:focus-visible strong{color:var(--ottone)}
+.readme summary:focus-visible{outline:2px solid var(--ottone);outline-offset:-2px}
+.readme[open] summary{border-bottom:1px solid var(--bordo)}
+.readme[open] summary span::before{content:"– nascondi"}
+.readme summary span::before{content:"+ leggi"}
+.readme-corpo{padding:6px 22px 30px;color:var(--tenue);font-size:14.5px;line-height:1.65;max-width:78ch}
+.readme-corpo h2{font-family:var(--cond);font-size:19px;font-weight:600;color:var(--testo);margin:28px 0 10px;letter-spacing:.005em}
+.readme-corpo h2:first-child{margin-top:22px}
+.readme-corpo h3{font-family:var(--cond);font-size:15px;font-weight:600;color:var(--testo);margin:20px 0 8px}
+.readme-corpo p{margin:0 0 12px}
+.readme-corpo code{font-family:var(--mono);font-size:12.5px;background:var(--fondo);border:1px solid var(--bordo);border-radius:2px;padding:1px 5px;color:var(--testo)}
+.readme-corpo a{color:var(--ottone);text-decoration:underline;text-underline-offset:2px}
+.readme-corpo ol{margin:0 0 14px;padding-left:22px}
+.readme-corpo li{margin-bottom:9px}
+.readme-corpo li::marker{color:var(--ottone);font-family:var(--mono)}
+.readme-corpo .tabwrap{overflow-x:auto;margin:0 0 16px}
+.readme-corpo table{border-collapse:collapse;width:100%;font-size:13px;min-width:420px}
+.readme-corpo th,.readme-corpo td{border:1px solid var(--bordo);padding:8px 11px;text-align:left;vertical-align:top}
+.readme-corpo th{background:var(--alto);color:var(--testo);font-family:var(--cond);font-weight:600;letter-spacing:.03em}
 
 @media(max-width:560px){
   h1{font-size:31px}
@@ -99,6 +124,57 @@ h1{font-family:var(--cond);font-weight:700;font-size:40px;line-height:1.05;margi
   </nav>
 
   <p class="pie">Nuovi strumenti verranno aggiunti qui man mano che vengono creati.</p>
+
+  <details class="readme">
+    <summary><strong>README del progetto</strong><span></span></summary>
+    <div class="readme-corpo">
+      <p>Raccolta di strumenti locali in HTML/JavaScript puro: ogni pagina funziona da sola nel browser, senza server e senza inviare file da nessuna parte. Non serve installare nulla: basta aprire i file <code>.html</code> (o pubblicarli su un hosting statico).</p>
+      <p>L'unica dipendenza esterna è la libreria <a href="https://github.com/gitbrent/xlsx-js-style" target="_blank" rel="noopener">xlsx-js-style</a> (fork di SheetJS con supporto alla scrittura degli stili delle celle), caricata da CDN in ogni pagina che legge o scrive file Excel. Al primo utilizzo serve quindi una connessione a internet; le pagine mostrano un avviso se la libreria non si carica.</p>
+
+      <h2>Struttura del progetto</h2>
+      <div class="tabwrap"><table>
+        <thead><tr><th>File</th><th>Cosa fa</th></tr></thead>
+        <tbody>
+          <tr><td><code>index.html</code></td><td>Pagina di ingresso: un pulsante per ogni strumento.</td></tr>
+          <tr><td><code>gestione-distribuzione.html</code></td><td>Riconciliazione dei posti disponibili con quelli già assegnati.</td></tr>
+          <tr><td><code>gestione-bandi.html</code></td><td>Generatori di script SQL di inserimento per bandi, sedi in uscita e utenti.</td></tr>
+        </tbody>
+      </table></div>
+      <p>Quando si aggiunge una nuova pagina, va anche collegata da un nuovo pulsante in <code>index.html</code>.</p>
+
+      <h2><code>index.html</code></h2>
+      <p>Griglia di "pulsantoni", uno per strumento, con titolo, breve descrizione e link alla pagina. Per aggiungere uno strumento basta un nuovo blocco <code>&lt;a class="pulsante"&gt;</code> nella griglia.</p>
+
+      <h2><code>gestione-distribuzione.html</code> — Gestione Distribuzione</h2>
+      <p>Calcola il netto tra un file di posti disponibili e uno o più file di posti già assegnati da sottrarre.</p>
+      <h3>Flusso</h3>
+      <ol>
+        <li><strong>Posti disponibili</strong> (file 1, obbligatorio): si carica l'Excel, si sceglie il foglio, la riga dei titoli e la prima riga di dati (con anteprima cliccabile), poi si indicano le <strong>colonne chiave</strong> (una o più, usate per abbinare le righe tra i file) e la <strong>colonna del totale</strong> di partenza.</li>
+        <li><strong>File da sottrarre</strong> (facoltativi, se ne possono aggiungere quanti si vuole con "Aggiungi un file da sottrarre"): per ciascuno si carica l'Excel, si abbina ogni colonna chiave del file 1 alla colonna corrispondente in questo file, e si scelgono una o più <strong>colonne da sommare</strong>. Senza nessun file da sottrarre il netto coincide con i disponibili.</li>
+        <li><strong>Aggregazione dei codici</strong> (facoltativa, per ogni file da sottrarre): regole per riscrivere uno o più codici in un codice diverso prima del confronto (utile quando i codici non coincidono esattamente tra i due file); mostra anche i codici del file che non trovano corrispondenza nel primo file, con il totale di posti che rappresentano.</li>
+        <li><strong>Calcolo</strong>: per ogni riga del file 1, somma quanto trovato nei file da sottrarre sulla stessa chiave e calcola <code>netto = disponibili - sottratti</code>. I valori negativi si possono lasciare com'è o azzerare. Le chiavi presenti solo nei file da sottrarre finiscono tra le "chiavi orfane". Un valore di chiave che è un errore Excel (<code>#N/D</code>, <code>#N/A</code>, <code>#REF!</code>, <code>#VALORE!</code>/<code>#VALUE!</code>, <code>#DIV/0!</code>, <code>#NOME?</code>/<code>#NAME?</code>, <code>#NULL!</code>, <code>#NUM!</code>) viene trattato come vuoto: la riga non si abbina a nulla, invece di essere unita per errore ad altre righe con lo stesso errore.</li>
+        <li><strong>Esito</strong>: tabella con filtri (tutte / solo variate / solo negative / solo non abbinate), esportazione in Excel e generazione di script SQL.</li>
+      </ol>
+      <h3>Esportazione Excel</h3>
+      <p>Foglio <code>RISULTATO</code>: si possono scegliere quali colonne originali del file 1 includere (le colonne chiave e quella del totale sono sempre incluse), più le colonne calcolate (dettaglio delle sottrazioni per file, <code>TOT_DA_SOTTRARRE</code>, netto, <code>ESITO</code>, <code>CONTROLLO</code>). Sulle righe con una sottrazione effettiva i posti in ingresso e il netto sono evidenziati in ambra; in rosso se il netto è negativo. <code>ESITO</code> vale <code>MODIFICATA</code> solo se c'è stata una sottrazione effettiva, altrimenti <code>NON MODIFICATA</code>.</p>
+      <p>Foglio <code>NON_ABBINATE</code>: una riga per ogni chiave orfana o non valida, con <code>FILE_DA_SOTTRARRE</code> (nome file e foglio), <code>SORGENTE</code> (il file dei posti disponibili), <code>MOTIVO</code> ("Chiave assente nel primo file" oppure "Chiave non valida"), le colonne chiave, il dettaglio dei valori e il totale non sottratto.</p>
+      <p>Foglio <code>RIEPILOGO</code>: parametri usati, legenda colori, colonne incluse, totali.</p>
+      <h3>Script SQL</h3>
+      <p>Due varianti (<code>SCRIPT_ORDINARIO</code> / <code>SCRIPT_104</code>): una <code>INSERT</code> per riga con <code>N_POSTI_ENTRATA</code> pari al netto appena calcolato, <code>ID_BANDO</code> parametrico, colonne del file 1 scelte per <code>CODICE_SEDE</code> e <code>ID_QUALIFICA</code>. Si può limitare l'export alle sole righe con almeno un posto positivo, e copiare lo script negli appunti oltre a scaricarlo.</p>
+
+      <h2><code>gestione-bandi.html</code> — Gestione Bandi</h2>
+      <p>Tre generatori indipendenti di script SQL di inserimento (schema <code>MOBINT</code>), ciascuno con anteprima, conteggio delle righe e un pulsante "Copia lo script" oltre al download. Una barra di navigazione fissa permette di saltare direttamente a una delle tre sezioni.</p>
+      <h3>1. Nuovo bando — <code>MOBINT.BANDI</code></h3>
+      <p>Form con anno, tipo bando, stato bando, descrizione, date (accettazione, apertura/chiusura, rettifica opzionale). Si possono mettere in coda più bandi e scaricare un unico script con tutte le <code>INSERT</code> più la <code>COMMIT</code> finale. L'<code>ID</code> non si inserisce mai a mano: è sempre <code>(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.BANDI)</code>. Per ogni bando il form chiede anche l'<code>ID_BANDO</code> e il nome del file (di default <code>Mobilità.pdf</code>) del regolamento collegato, con la relativa <code>INSERT</code> su <code>MOBINT.BANDI_REGOLAMENTI</code>.</p>
+      <h3>2. Sedi in uscita — <code>MOBINT.BANDO_*_SEDI_USCITA</code></h3>
+      <p>Si carica un Excel, si sceglie la tabella di destinazione, le colonne per <code>CODICE_SEDE</code> e <code>N_MAX_USCITA</code> e si indica l'<code>ID_BANDO</code>. Le righe senza <code>CODICE_SEDE</code> sono saltate; quelle con <code>N_MAX_USCITA</code> a 0 sono escluse. Per <code>BANDO_OrdinarioPNRR_SEDI_USCITA</code> e <code>BANDO_104PNRR_SEDI_USCITA</code> compaiono anche le colonne <code>NUM_DIP</code> e <code>DOTAZIONE</code>.</p>
+      <h3>3. Utenti — <code>MOBINT.BANDO_*_UTENTI</code></h3>
+      <p>Si carica un Excel, si sceglie la tabella, le colonne per <code>MATRICOLA</code> e <code>CODICE_SEDE_USCITA</code> e si indica l'<code>ID_BANDO</code>. Ogni riga valida ha una casella <code>CHECKCOPERTURA</code> modificabile singolarmente (di default a 0), con due scorciatoie per segnarle o azzerarle tutte insieme.</p>
+
+      <h2>Versionamento</h2>
+      <p>Ogni push su <code>main</code> pubblica automaticamente una nuova release con un numero incrementale (<code>v1</code>, <code>v2</code>, …) e lo zip del progetto allegato, nella pagina "Releases" del repository.</p>
+    </div>
+  </details>
 </div>
 
 </body>

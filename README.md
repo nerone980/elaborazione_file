@@ -99,3 +99,5 @@ L'elenco delle versioni e gli zip scaricabili si trovano nella pagina "Releases"
 ## Manutenzione di questo README
 
 Questo file va tenuto aggiornato: ogni volta che si aggiunge, rimuove o modifica in modo sostanziale una funzionalità in una delle pagine (nuovo strumento, nuovo campo, nuova regola di validazione, nuova tabella, cambio di logica), va aggiornata anche la sezione corrispondente qui sopra.
+
+Il contenuto di questo README è anche riportato, tradotto in HTML, in un box a comparsa (`<details class="readme">`) in fondo a `index.html`, così chi apre la pagina lo legge senza andare su GitHub. Non essendoci un passaggio di build che lo generi automaticamente dal file `.md`, va aggiornato a mano insieme a questo file.
