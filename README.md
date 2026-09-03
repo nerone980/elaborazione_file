@@ -84,6 +84,18 @@ Gli script di sedi e utenti includono nel nome del file un suffisso derivato dal
 
 Le tre pagine condividono lo stesso stile (dark, IBM Plex, accento ambra) e le stesse convenzioni: un pulsante "Copia" accanto a ogni script generato, per usarlo subito in un client SQL senza passare dal download, e gli elementi di stato/conteggio (es. `statoCalcolo`, `bandiConta`, `sqlConta`) marcati `aria-live` in modo che uno screen reader annunci i cambiamenti senza spostare il focus. Niente icone o emoji: lo stile è deliberatamente tipografico.
 
+---
+
+## Versionamento
+
+Ogni push su `main` fa scattare il workflow `.github/workflows/release-zip.yml`, che:
+
+1. calcola una versione incrementale `vN` (`N` è il numero progressivo di esecuzioni del workflow, quindi cresce a ogni push su `main`);
+2. crea uno zip del progetto (`utility-mobilita-vN.zip`, senza `.git` e `.github`);
+3. pubblica una GitHub Release con quel tag e lo zip allegato.
+
+L'elenco delle versioni e gli zip scaricabili si trovano nella pagina "Releases" del repository. Non c'è un file di versione da aggiornare a mano: la versione più recente è sempre l'ultima release pubblicata.
+
 ## Manutenzione di questo README
 
 Questo file va tenuto aggiornato: ogni volta che si aggiunge, rimuove o modifica in modo sostanziale una funzionalità in una delle pagine (nuovo strumento, nuovo campo, nuova regola di validazione, nuova tabella, cambio di logica), va aggiornata anche la sezione corrispondente qui sopra.

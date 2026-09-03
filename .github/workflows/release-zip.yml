@@ -1,0 +1,34 @@
+name: Zip versionato
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Calcola la versione
+        id: ver
+        run: echo "version=v${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+      - name: Crea lo zip del progetto
+        run: |
+          mkdir -p dist
+          zip -r "dist/utility-mobilita-${{ steps.ver.outputs.version }}.zip" . \
+            -x '.git/*' -x '.github/*' -x 'dist/*'
+
+      - name: Pubblica la release con lo zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.ver.outputs.version }}" \
+            "dist/utility-mobilita-${{ steps.ver.outputs.version }}.zip" \
+            --title "${{ steps.ver.outputs.version }}" \
+            --notes "Build automatica dal push su main (commit ${{ github.sha }})."
