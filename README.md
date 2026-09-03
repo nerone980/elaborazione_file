@@ -38,7 +38,7 @@ Calcola il netto tra un file di posti disponibili e uno o più file di posti gi�
 
 Foglio `RISULTATO`: si possono scegliere quali colonne originali del file 1 includere (le colonne chiave e quella del totale sono sempre incluse), più le colonne calcolate (dettaglio delle sottrazioni per file, `TOT_DA_SOTTRARRE`, netto, `ESITO`, `CONTROLLO`). Sulle righe con una sottrazione effettiva (`sub ≠ 0`) i posti in ingresso e il netto sono evidenziati in ambra; in rosso se il netto è negativo. `ESITO` vale `MODIFICATA` solo se c'è stata una sottrazione effettiva, altrimenti `NON MODIFICATA`.
 
-Foglio `NON_ABBINATE`: le chiavi orfane con il relativo totale non sottratto.
+Foglio `NON_ABBINATE`: una riga per ogni chiave orfana o non valida, con `FILE_DA_SOTTRARRE` (nome file e foglio), `SORGENTE` (il file dei posti disponibili), `MOTIVO` ("Chiave assente nel primo file" oppure "Chiave non valida"), le colonne chiave, il dettaglio dei valori e il totale non sottratto. Un valore di chiave che è un errore Excel (`#N/D`, `#N/A`, `#REF!`, ecc. — vedi sopra) non viene silenziosamente ignorato: la riga compare qui con il proprio motivo, senza essere unita ad altre righe con lo stesso errore.
 
 Foglio `RIEPILOGO`: parametri usati, legenda colori, colonne incluse, totali.
 
