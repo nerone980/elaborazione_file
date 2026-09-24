@@ -64,13 +64,13 @@ Per ogni bando in coda il form chiede anche il **nome del file** (di default `Mo
 
 ### 2. Sedi in uscita — `MOBINT.BANDO_*_SEDI_USCITA`
 
-Si carica un Excel, si sceglie la **tabella di destinazione**, le colonne per `CODICE_SEDE` e `N_MAX_USCITA` e si indica l'`ID_BANDO` (parametrico). Come per i bandi, l'`ID` è sempre `(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT.<tabella>)`. Le righe senza `CODICE_SEDE` sono saltate; quelle con `N_MAX_USCITA` a 0 sono escluse dallo script (entrambe contate a parte nell'anteprima).
+Si carica un Excel, si sceglie la **tabella di destinazione**, le colonne per `CODICE_SEDE` e `N_MAX_USCITA` e si indica l'`ID_BANDO` (parametrico). Come per i bandi, l'`ID` è sempre `(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT."<tabella>")`. Il nome della tabella è tra doppi apici perché contiene lettere minuscole (es. `BANDO_OrdinarioCT_SEDI_USCITA`): senza apici Oracle lo maiuscolerebbe tutto e non troverebbe la tabella. Le righe senza `CODICE_SEDE` sono saltate; quelle con `N_MAX_USCITA` a 0 sono escluse dallo script (entrambe contate a parte nell'anteprima).
 
 Tabelle disponibili: `BANDO_OrdinarioCT_SEDI_USCITA`, `BANDO_104CT_SEDI_USCITA` (colonne base), `BANDO_OrdinarioPNRR_SEDI_USCITA`, `BANDO_104PNRR_SEDI_USCITA` (queste due hanno anche `NUM_DIP` e `DOTAZIONE`, prese da altre due colonne dell'Excel — i relativi selettori compaiono solo quando si sceglie una di queste due tabelle).
 
 ### 3. Utenti — `MOBINT.BANDO_*_UTENTI`
 
-Si carica un Excel, si sceglie la tabella, le colonne per `MATRICOLA` e `CODICE_SEDE_USCITA` e si indica l'`ID_BANDO`. Stessa logica di `ID` a subquery delle sedi. Compare un elenco con tutte le righe valide (matricola e codice sede uscita non vuoti); ognuna ha una casella `CHECKCOPERTURA` modificabile singolarmente (di default tutte a 0), con due scorciatoie per segnarle o azzerarle tutte insieme. Le righe senza matricola o senza codice sede uscita sono saltate e contate a parte.
+Si carica un Excel, si sceglie la tabella, le colonne per `MATRICOLA` e `CODICE_SEDE_USCITA` e si indica l'`ID_BANDO`. Stessa logica di `ID` a subquery delle sedi, con la tabella tra doppi apici per lo stesso motivo. Compare un elenco con tutte le righe valide (matricola e codice sede uscita non vuoti); ognuna ha una casella `CHECKCOPERTURA` modificabile singolarmente (di default tutte a 0), con due scorciatoie per segnarle o azzerarle tutte insieme. Le righe senza matricola o senza codice sede uscita sono saltate e contate a parte.
 
 Tabelle disponibili: `BANDO_OrdinarioCT_UTENTI`, `BANDO_OrdinarioPNRR_UTENTI`, `BANDO_104PNRR_UTENTI`, `BANDO_104CT_UTENTI` (nessuna colonna extra per questa famiglia).
 
