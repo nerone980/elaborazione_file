@@ -409,6 +409,7 @@ function nomeFile(base,ext){
   return base+"_"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes())+"."+ext;
 }
 function tagTabella(t){ return String(t).replace(/^BANDO_/,"").replace(/_SEDI_USCITA$|_UTENTI$/,"").toLowerCase(); }
+function tabellaSql(t){ return "MOBINT.\""+t+"\""; }
 function formattaData(v){
   if(!v) return null;
   var s=v.replace("T"," ");
@@ -671,12 +672,12 @@ function righeSedi(){
 }
 function insertSede(riga,idBando,tabella){
   var cols=["ID","CODICE_SEDE","N_MAX_USCITA","ID_BANDO"];
-  var vals=["(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT."+tabella+")",apice(riga.sede),riga.uscita,idBando];
+  var vals=["(SELECT NVL(MAX(ID), 0) + 1 FROM "+tabellaSql(tabella)+")",apice(riga.sede),riga.uscita,idBando];
   if(sediHaExtra(tabella)){
     cols.push("NUM_DIP","DOTAZIONE");
     vals.push(riga.numDip,riga.dotazione);
   }
-  return "INSERT INTO MOBINT."+tabella+" ("+cols.join(", ")+") VALUES ("+vals.join(", ")+");";
+  return "INSERT INTO "+tabellaSql(tabella)+" ("+cols.join(", ")+") VALUES ("+vals.join(", ")+");";
 }
 function scriptSedi(){
   var idBando=$('sediBando').value.trim();
@@ -842,8 +843,8 @@ function applicaCheckCoperturaTutti(v){
   anteprimaUtenti();
 }
 function insertUtente(riga,idBando,checkCopertura,tabella){
-  return "INSERT INTO MOBINT."+tabella+" (ID, MATRICOLA, CODICE_SEDE_USCITA, ID_BANDO, CHECKCOPERTURA) VALUES ("+
-    "(SELECT NVL(MAX(ID), 0) + 1 FROM MOBINT."+tabella+"), "+apice(riga.matricola)+", "+apice(riga.sedeUscita)+", "+idBando+", "+checkCopertura+");";
+  return "INSERT INTO "+tabellaSql(tabella)+" (ID, MATRICOLA, CODICE_SEDE_USCITA, ID_BANDO, CHECKCOPERTURA) VALUES ("+
+    "(SELECT NVL(MAX(ID), 0) + 1 FROM "+tabellaSql(tabella)+"), "+apice(riga.matricola)+", "+apice(riga.sedeUscita)+", "+idBando+", "+checkCopertura+");";
 }
 function scriptUtenti(){
   var idBando=$('utentiBando').value.trim();
