@@ -50,7 +50,7 @@ Due varianti (`SCRIPT_ORDINARIO` / `SCRIPT_104`, tabelle `MOBINT.SEDI_BANDO_ORDI
 
 ## `gestione-bandi.html` — Gestione Bandi
 
-Tre generatori indipendenti di script SQL di inserimento (schema `MOBINT`), ciascuno con anteprima della prima `INSERT`, conteggio delle righe e un pulsante "Copia lo script" (oltre al download) prima dello scaricamento. Una barra di navigazione fissa in cima alla pagina permette di saltare direttamente a una delle tre sezioni.
+Tre generatori indipendenti di script SQL di inserimento (schema `MOBINT`), ciascuno con anteprima della prima `INSERT`, conteggio delle righe e un pulsante "Copia lo script" (oltre al download) prima dello scaricamento. Una barra di navigazione in cima alla pagina permette di saltare direttamente a una delle tre sezioni.
 
 ### 1. Nuovo bando — `MOBINT.BANDI`
 
